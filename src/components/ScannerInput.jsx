@@ -23,10 +23,7 @@ export default function ScannerInput({ onScan, monitorId, setMonitorId }) {
   const [bibInput, setBibInput] = useState('');
 
   // Camera State
-  const [showCamera, setShowCamera] = useState(() => {
-    const saved = localStorage.getItem('trail_camera_active');
-    return saved !== null ? saved === 'true' : true;
-  });
+  const [showCamera, setShowCamera] = useState(true);
   const [facingMode, setFacingMode] = useState(() => {
     return localStorage.getItem('trail_camera_facing') || 'environment';
   });
