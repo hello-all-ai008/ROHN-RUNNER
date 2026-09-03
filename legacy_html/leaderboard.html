@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard - Trail Running Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background-color: var(--bg-dark);
+    }
+    .header-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+    .distance-toggle {
+      display: flex;
+      background-color: var(--bg-card);
+      border-radius: 50px;
+      padding: 0.5rem;
+    }
+    .toggle-btn {
+      padding: 0.5rem 2rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    .toggle-btn.active {
+      background-color: var(--accent-blue);
+      color: white;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2rem;
+      padding: 0 2rem;
+    }
+    .age-group-board {
+      background: #ffffff;
+      border: 1px solid rgba(0,0,0,0.05);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    .board-title {
+      font-size: 1.5rem;
+      color: var(--text-main);
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--accent-blue);
+      padding-left: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-banner">
+    <div>
+      <h1 style="margin: 0; font-size: 3rem; text-transform: uppercase; letter-spacing: 2px;">Live Leaderboard</h1>
+      <p style="color: var(--text-muted);">Top 5 Official Results</p>
+    </div>
+    
+    <div class="distance-toggle">
+      <div class="toggle-btn active" onclick="switchDist('5KM')">5 KM</div>
+      <div class="toggle-btn" onclick="switchDist('10KM')">10 KM</div>
+    </div>
+  </div>
+
+  <div class="board-grid" id="boardsContainer">
+    <!-- Boards injected by JS -->
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    const mockResults = {
+      '5KM': [
+        { age: "20-29 Male", runners: [{ name: "Alex B", time: "00:25:10"}, {name: "John D", time: "00:26:05"}] },
+        { age: "20-29 Female", runners: [{ name: "Wandee Run", time: "00:28:15"}, {name: "Sarah C", time: "00:29:40"}] },
+        { age: "30-39 Male", runners: [{ name: "Mike T", time: "00:24:50"}] }
+      ],
+      '10KM': [
+        { age: "20-29 Male", runners: [{ name: "Somchai Fast", time: "00:55:10"}] },
+        { age: "30-39 Male", runners: [{ name: "Tiw Runner", time: "00:52:15"}, {name: "Dave G", time: "00:53:05"}] },
+        { age: "40-49 Male", runners: [{ name: "Mana Power", time: "00:58:30"}] }
+      ]
+    };
+
+    function renderBoards(dist) {
+      const container = document.getElementById('boardsContainer');
+      container.innerHTML = '';
+      
+      const groups = mockResults[dist] || [];
+      
+      groups.forEach(group => {
+        let html = `<div class="age-group-board">
+                      <div class="board-title">${group.age}</div>`;
+        
+        group.runners.forEach((r, idx) => {
+          const rankClass = idx < 3 ? `rank-${idx+1}` : '';
+          html += `
+            <div class="leaderboard-row">
+              <div class="rank ${rankClass}">${idx+1}</div>
+              <div style="flex-grow: 1;">
+                <div style="font-weight: bold; font-size: 1.2rem;">${r.name}</div>
+              </div>
+              <div style="font-family: var(--font-display); font-size: 1.3rem; color: var(--success-green);">
+                ${r.time}
+              </div>
+            </div>
+          `;
+        });
+        
+        // Fill empty slots up to 5
+        for(let i = group.runners.length; i < 5; i++) {
+          html += `
+            <div class="leaderboard-row" style="opacity: 0.3;">
+              <div class="rank">${i+1}</div>
+              <div style="flex-grow: 1;">---</div>
+              <div>--:--:--</div>
+            </div>
+          `;
+        }
+
+        html += `</div>`;
+        container.innerHTML += html;
+      });
+    }
+
+    function switchDist(dist) {
+      document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderBoards(dist);
+    }
+
+    // Init
+    renderBoards('5KM');
+  </script>
+</body>
+</html>

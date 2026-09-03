@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV Monitor - Trail Running Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background-color: var(--bg-dark);
+      overflow: hidden;
+    }
+    #idleState {
+      opacity: 1;
+      transition: opacity 0.5s;
+    }
+    #activeState {
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.5s;
+      pointer-events: none;
+    }
+    .show-active #idleState { opacity: 0; }
+    .show-active #activeState { opacity: 1; pointer-events: auto; }
+    
+    .monitor-id-badge {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      background-color: rgba(255,255,255,0.1);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" style="position: absolute; top: 2rem; left: 2rem; color: var(--accent-blue); text-decoration: none; font-weight: bold; background-color: rgba(0,0,0,0.05); padding: 0.5rem 1rem; border-radius: 8px; z-index: 10;">&larr; Back to Hub</a>
+  <div class="monitor-id-badge" id="monitorIdDisplay">Monitor --</div>
+
+  <div class="monitor-container" id="idleState">
+    <h1 style="font-size: 3rem; color: var(--text-muted);">Ready for Check-in</h1>
+    <p style="color: rgba(255,255,255,0.2); font-size: 1.5rem; margin-top: 1rem;">Waiting for scanner data...</p>
+  </div>
+
+  <div class="monitor-container" id="activeState">
+    <div class="monitor-bib" id="displayBib">----</div>
+    <div class="monitor-name" id="displayName">Runner Name</div>
+    <div class="status-badge">CHECKED IN</div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Get monitor ID from URL query param, default to '1'
+    const urlParams = new URLSearchParams(window.location.search);
+    const monitorId = urlParams.get('id') || '1';
+    
+    document.getElementById('monitorIdDisplay').innerText = `Monitor ${monitorId}`;
+
+    let hideTimeout;
+
+    // Listen for cast events for this specific monitor
+    listenForCast(monitorId, (bib, name) => {
+      document.getElementById('displayBib').innerText = bib;
+      document.getElementById('displayName').innerText = name;
+      
+      document.body.classList.add('show-active');
+
+      // Clear previous timeout if multiple scans happen quickly
+      clearTimeout(hideTimeout);
+      
+      // Revert to idle after 5 seconds
+      hideTimeout = setTimeout(() => {
+        document.body.classList.remove('show-active');
+      }, 5000);
+    });
+  </script>
+</body>
+</html>

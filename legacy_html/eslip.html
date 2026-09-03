@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Slip Result - Trail Running Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .eslip-container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding-top: 2rem;
+    }
+    .ticket-header {
+      text-align: center;
+      padding: 2rem 1rem;
+      border-bottom: 1px dashed var(--border-color);
+    }
+    .ticket-body {
+      padding: 2rem 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container eslip-container">
+    <a href="index.html" style="color: var(--accent-blue); text-decoration: none; display: inline-block; margin-bottom: 2rem;">&larr; Back to Hub</a>
+    
+    <div class="ticket" id="ticketContent">
+      <div class="ticket-header">
+        <h2 style="color: var(--accent-blue); margin-bottom: 0.5rem;">FINISHER</h2>
+        <h1 id="rName" style="font-size: 2rem;">Loading...</h1>
+        <div style="font-size: 1.5rem; color: var(--success-green); font-weight: bold; margin-top: 1rem;">BIB: <span id="rBib">----</span></div>
+      </div>
+      <div class="ticket-body">
+        <div class="flex justify-between" style="margin-bottom: 1rem;">
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Age Group</div>
+            <div style="font-weight: bold;" id="rAge">--</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Distance</div>
+            <div style="font-weight: bold;" id="rDist">--</div>
+          </div>
+        </div>
+        
+        <div class="timeline">
+          <div class="timeline-item done">
+            <div style="font-weight: bold;">Check-in</div>
+            <div style="font-size: 0.9rem; color: var(--text-muted);" id="tCheckin">04:30:00</div>
+          </div>
+          <div class="timeline-item done">
+            <div style="font-weight: bold;">Start</div>
+            <div style="font-size: 0.9rem; color: var(--text-muted);">05:00:00</div>
+          </div>
+          <div class="timeline-item done">
+            <div style="font-weight: bold;">Station A1</div>
+            <div style="font-size: 0.9rem; color: var(--text-muted);">05:45:12</div>
+          </div>
+          <div class="timeline-item done">
+            <div style="font-weight: bold;">Station A2</div>
+            <div style="font-size: 0.9rem; color: var(--text-muted);">06:30:45</div>
+          </div>
+          <div class="timeline-item done">
+            <div style="font-weight: bold;">Finish</div>
+            <div style="font-size: 0.9rem; color: var(--success-green); font-weight: bold;">07:15:30</div>
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 2rem; color: var(--text-muted); font-size: 0.8rem;">
+          Official Time: 02:15:30<br>
+          Overall Rank: 12 | Group Rank: 3
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const bib = urlParams.get('bib') || '1001';
+    
+    const runner = getRunnerByBib(bib);
+    if (runner) {
+      document.getElementById('rName').innerText = runner.name;
+      document.getElementById('rBib').innerText = runner.bib;
+      document.getElementById('rAge').innerText = runner.ageGroup;
+      document.getElementById('rDist').innerText = runner.distance;
+      document.getElementById('tCheckin').innerText = runner.checkInTime || "N/A";
+    } else {
+      document.getElementById('rName').innerText = "Runner Not Found";
+    }
+  </script>
+</body>
+</html>

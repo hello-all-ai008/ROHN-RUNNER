@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trail Running Hub - Runner Apps</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .menu-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: all 0.3s ease;
+    }
+    .menu-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent-blue);
+      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+    }
+    .menu-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header style="text-align: center; margin-bottom: 3rem;">
+      <h1 style="font-size: 2.5rem; color: var(--accent-blue);">Trail Running Hub</h1>
+      <p style="color: var(--text-muted);">Runner Management System</p>
+    </header>
+
+    <div class="menu-grid">
+      <a href="scanner.html" class="card menu-card">
+        <div class="menu-icon">📱</div>
+        <h3>Check-in Scanner</h3>
+        <p style="color: var(--text-muted); text-align: center; font-size: 0.9rem;">Scan BIB and Cast to Monitor</p>
+      </a>
+
+      <a href="monitor.html?id=1" class="card menu-card">
+        <div class="menu-icon">🖥️</div>
+        <h3>Monitor TV (ID: 1)</h3>
+        <p style="color: var(--text-muted); text-align: center; font-size: 0.9rem;">Large screen for real-time check-in</p>
+      </a>
+
+      <a href="eslip.html?bib=1001" class="card menu-card">
+        <div class="menu-icon">🎟️</div>
+        <h3>E-Slip Result</h3>
+        <p style="color: var(--text-muted); text-align: center; font-size: 0.9rem;">Runner's electronic slip (Example)</p>
+      </a>
+
+      <a href="dashboard.html" class="card menu-card">
+        <div class="menu-icon">📊</div>
+        <h3>Overall Dashboard</h3>
+        <p style="color: var(--text-muted); text-align: center; font-size: 0.9rem;">Summary & Statistics</p>
+      </a>
+
+      <a href="leaderboard.html" class="card menu-card">
+        <div class="menu-icon">🏆</div>
+        <h3>Leaderboard</h3>
+        <p style="color: var(--text-muted); text-align: center; font-size: 0.9rem;">Top 5 Monitor by Age Group</p>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check-in Scanner - Trail Running Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .scanner-form {
+      max-width: 400px;
+      margin: 0 auto;
+      padding-top: 2rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+    }
+    .msg {
+      margin-top: 1rem;
+      text-align: center;
+      font-weight: 600;
+    }
+    .msg.success { color: var(--success-green); }
+    .msg.error { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="container scanner-form">
+    <a href="index.html" style="color: var(--accent-blue); text-decoration: none; display: inline-block; margin-bottom: 2rem;">&larr; Back to Hub</a>
+    
+    <div class="card">
+      <h2 style="text-align: center; margin-bottom: 1.5rem;">Check-in Scanner</h2>
+      
+      <!-- Mock Scanner Box -->
+      <div class="scanner-box" style="margin-bottom: 1.5rem;">
+        <div class="scanner-line"></div>
+        <p style="color: rgba(255,255,255,0.3);">Camera / Barcode Scanner View</p>
+      </div>
+
+      <div class="form-group">
+        <label for="bib">BIB Number</label>
+        <input type="text" id="bib" class="input" placeholder="Enter BIB (e.g., 1001)">
+      </div>
+
+      <div class="form-group">
+        <label for="monitor">Cast to Monitor</label>
+        <select id="monitor" class="input" style="background-color: var(--bg-dark);">
+          <option value="1">Monitor 1</option>
+          <option value="2">Monitor 2</option>
+          <option value="3">Monitor 3</option>
+          <option value="4">Monitor 4</option>
+          <option value="5">Monitor 5</option>
+        </select>
+      </div>
+
+      <button id="checkInBtn" class="btn btn-success" style="width: 100%; font-size: 1.1rem; padding: 1rem;">
+        Check-in & Cast
+      </button>
+
+      <div id="resultMsg" class="msg"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('checkInBtn').addEventListener('click', () => {
+      const bib = document.getElementById('bib').value;
+      const monitorId = document.getElementById('monitor').value;
+      const msgDiv = document.getElementById('resultMsg');
+      
+      if (!bib) {
+        msgDiv.className = 'msg error';
+        msgDiv.innerText = 'Please enter a BIB number.';
+        return;
+      }
+
+      const result = checkInRunner(bib);
+      
+      if (result.success) {
+        // Cast to Monitor
+        castToMonitor(monitorId, bib, result.name);
+        
+        msgDiv.className = 'msg success';
+        msgDiv.innerText = `Checked in: ${result.name} (Cast to Monitor ${monitorId})`;
+        document.getElementById('bib').value = ''; // clear input
+      } else {
+        msgDiv.className = 'msg error';
+        msgDiv.innerText = result.message;
+      }
+    });
+  </script>
+</body>
+</html>
