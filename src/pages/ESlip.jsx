@@ -3,15 +3,19 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
 import { ArrowLeft, Search, Medal, Timer, Map, User } from 'lucide-react';
 import logoFull from '../LOGO/logo-rohn-full.png';
+import { computeRank, formatTime, checkpointTimeline } from '../lib/results';
 
 function ESlip() {
   const { bib } = useParams();
   const navigate = useNavigate();
-  const { getRunnerByBib } = useRunner();
-  
+  const { runners, getRunnerByBib, loading } = useRunner();
+
   const [searchInput, setSearchInput] = useState(bib || '');
-  
+
   const runner = bib ? getRunnerByBib(bib) : null;
+  const rank = runner ? computeRank(runner, runners) : null;
+  const officialTime = runner ? formatTime(runner.finish) : null;
+  const timeline = runner ? checkpointTimeline(runner.cps, runner.finish) : [];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -76,7 +80,13 @@ function ESlip() {
         </form>
 
         {/* Result Area */}
-        {bib && !runner && (
+        {bib && loading && (
+          <div style={{ textAlign: 'center', padding: '3rem', background: 'rgba(0,0,0,0.3)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <p style={{ color: 'rgba(255,255,255,0.6)' }}>Loading results...</p>
+          </div>
+        )}
+
+        {bib && !loading && !runner && (
           <div style={{ textAlign: 'center', padding: '3rem', background: 'rgba(0,0,0,0.3)', borderRadius: '20px', border: '1px solid rgba(255,0,0,0.3)' }}>
             <h2 style={{ color: '#ff6b6b' }}>Runner Not Found</h2>
             <p style={{ color: 'rgba(255,255,255,0.6)' }}>No official record found for BIB "{bib}"</p>
@@ -124,14 +134,14 @@ function ESlip() {
                   <div style={{ background: 'rgba(157,51,214,0.2)', padding: '1rem', borderRadius: '12px' }}><Timer size={24} color="#d8b4fe" /></div>
                   <div>
                     <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>Official Time</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>02:15:30</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{officialTime || 'ยังไม่เข้าเส้นชัย / Not finished yet'}</div>
                   </div>
                 </div>
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ background: 'rgba(157,51,214,0.2)', padding: '1rem', borderRadius: '12px' }}><Medal size={24} color="#d8b4fe" /></div>
                   <div>
-                    <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>Overall Rank</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>#12</div>
+                    <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>Group Rank</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{rank ? `#${rank}` : '-'}</div>
                   </div>
                 </div>
               </div>
@@ -139,25 +149,24 @@ function ESlip() {
               {/* Timeline Alternative */}
               <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '16px', padding: '2rem' }}>
                 <h3 style={{ margin: '0 0 1.5rem 0', color: 'rgba(255,255,255,0.8)', fontSize: '1.2rem' }}>Race Splits</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', marginTop: '2rem' }}>
-                  <div style={{ position: 'absolute', top: '8px', left: '10%', right: '10%', height: '2px', background: 'rgba(255,255,255,0.1)', zIndex: 0 }}></div>
-                  <div style={{ position: 'absolute', top: '8px', left: '10%', width: '80%', height: '2px', background: 'linear-gradient(to right, #591b98, #9d33d6)', zIndex: 0 }}></div>
-                  
-                  {[
-                    { label: 'Check-in', time: runner.checkInTime || 'N/A' },
-                    { label: 'Start', time: '05:00:00' },
-                    { label: 'Station A1', time: '05:45:12' },
-                    { label: 'Finish', time: '07:15:30' }
-                  ].map((split, i) => (
-                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#d8b4fe', border: '4px solid #1a0e5b', marginBottom: '1rem', boxShadow: '0 0 15px #d8b4fe' }}></div>
-                      <div style={{ fontSize: '1rem', fontWeight: 'bold' }}>{split.label}</div>
-                      <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>{split.time}</div>
-                    </div>
-                  ))}
-                </div>
+                {timeline.length === 0 ? (
+                  <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0 }}>No checkpoint data yet</p>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', marginTop: '2rem' }}>
+                    <div style={{ position: 'absolute', top: '8px', left: '10%', right: '10%', height: '2px', background: 'rgba(255,255,255,0.1)', zIndex: 0 }}></div>
+                    <div style={{ position: 'absolute', top: '8px', left: '10%', width: '80%', height: '2px', background: 'linear-gradient(to right, #591b98, #9d33d6)', zIndex: 0 }}></div>
+
+                    {timeline.map((split, i) => (
+                      <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#d8b4fe', border: '4px solid #1a0e5b', marginBottom: '1rem', boxShadow: '0 0 15px #d8b4fe' }}></div>
+                        <div style={{ fontSize: '1rem', fontWeight: 'bold' }}>{split.label}</div>
+                        <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>{split.time}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              
+
             </div>
           </div>
         )}

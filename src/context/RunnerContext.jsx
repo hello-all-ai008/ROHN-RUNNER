@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { CURRENT_EVENT_ID } from '../lib/constants';
+import { normalizeRunner } from '../lib/results';
 
+// Legacy 5-runner mock roster. Kept ONLY to back Scanner.jsx's / Monitor.jsx's
+// checkInRunner() flow (those pages are out of scope and stay on mock data) —
+// it is never merged into the real `runners` state below.
 const initialMockRunners = [
   { bib: "1001", name: "Tiw Runner", ageGroup: "30-39", gender: "M", distance: "5KM", status: "DNS" },
   { bib: "1002", name: "Somchai Fast", ageGroup: "20-29", gender: "M", distance: "10KM", status: "DNS" },
@@ -8,47 +14,114 @@ const initialMockRunners = [
   { bib: "1005", name: "Wandee Run", ageGroup: "20-29", gender: "F", distance: "5KM", status: "DNS" }
 ];
 
+const MOCK_STORAGE_KEY = 'react_runners_v2';
+const PAGE_SIZE = 1000; // PostgREST caps each request at 1000 rows regardless of a higher client limit.
+
 const RunnerContext = createContext();
 
 export const useRunner = () => useContext(RunnerContext);
 
+async function fetchAllPublicResults() {
+  const rows = [];
+  let from = 0;
+  for (;;) {
+    const { data, error } = await supabase
+      .from('public_results')
+      .select('*')
+      .eq('event_id', CURRENT_EVENT_ID)
+      .order('bib')
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+
+    rows.push(...(data || []));
+    if (!data || data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+  return rows;
+}
+
 export const RunnerProvider = ({ children }) => {
   const [runners, setRunners] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [castEvent, setCastEvent] = useState(null);
 
-  // Initialize and load from local storage
-  useEffect(() => {
-    const stored = localStorage.getItem('react_runners_v2');
-    if (!stored) {
-      localStorage.setItem('react_runners_v2', JSON.stringify(initialMockRunners));
-      setRunners(initialMockRunners);
-    } else {
-      setRunners(JSON.parse(stored));
+  const loadRunners = useCallback(async () => {
+    try {
+      const rows = await fetchAllPublicResults();
+      setRunners(rows.map(normalizeRunner));
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load runners');
+    } finally {
+      setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    loadRunners();
 
     const handleStorage = (e) => {
-      if (e.key === 'react_runners_v2') {
-        setRunners(JSON.parse(e.newValue));
-      }
       if (e.key === 'react_cast_event') {
         setCastEvent(JSON.parse(e.newValue));
       }
     };
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+  }, [loadRunners]);
 
-  const getRunnerByBib = (bib) => {
-    return runners.find(r => r.bib === bib);
-  };
+  // Live updates for ESlip/Leaderboard/Dashboard via Realtime Broadcast, with
+  // a window-focus refetch as a fallback in case a broadcast is missed. Lives
+  // here (not per-page) so every consumer of `runners` gets live data for
+  // free and there is exactly one subscription/merge path to keep correct.
+  //
+  // The channel is private: realtime.broadcast_changes() always requires
+  // Realtime Authorization (an RLS policy on realtime.messages), there is no
+  // public/private toggle on it like plain realtime.send() has. setAuth()
+  // attaches the client's current key (anon, here) so that policy check can
+  // evaluate `to anon`.
+  useEffect(() => {
+    let cancelled = false;
+    const channel = supabase.channel(`results:${CURRENT_EVENT_ID}`, {
+      config: { private: true },
+    });
 
+    channel.on('broadcast', { event: '*' }, (payload) => {
+      const row = payload.payload?.record;
+      if (!row || !row.bib) return;
+      const updated = normalizeRunner(row);
+      setRunners((prev) => prev.map((r) => (r.bib === updated.bib ? { ...r, ...updated } : r)));
+    });
+
+    supabase.realtime.setAuth().then(() => {
+      if (!cancelled) channel.subscribe();
+    });
+
+    const handleFocus = () => loadRunners();
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadRunners]);
+
+  const getRunnerByBib = (bib) => runners.find(r => r.bib === bib);
+
+  // Legacy check-in flow for Scanner.jsx — writes to a mock localStorage
+  // roster only, never to Supabase and never into the real `runners` state.
   const checkInRunner = (bib) => {
+    const stored = localStorage.getItem(MOCK_STORAGE_KEY);
+    const mockRunners = stored ? JSON.parse(stored) : initialMockRunners;
+
     let runnerName = "";
     let runnerDistance = "";
     let runnerAgeGroup = "";
     let found = false;
 
-    const newRunners = runners.map(r => {
+    const newMockRunners = mockRunners.map(r => {
       if (r.bib === bib) {
         found = true;
         runnerName = r.name;
@@ -64,8 +137,7 @@ export const RunnerProvider = ({ children }) => {
     });
 
     if (found) {
-      setRunners(newRunners);
-      localStorage.setItem('react_runners_v2', JSON.stringify(newRunners));
+      localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(newMockRunners));
       return { success: true, name: runnerName, distance: runnerDistance, ageGroup: runnerAgeGroup };
     }
     return { success: false, message: "BIB not found" };
@@ -86,7 +158,7 @@ export const RunnerProvider = ({ children }) => {
   };
 
   return (
-    <RunnerContext.Provider value={{ runners, getRunnerByBib, checkInRunner, castToMonitor, castEvent }}>
+    <RunnerContext.Provider value={{ runners, loading, error, getRunnerByBib, checkInRunner, castToMonitor, castEvent, refetchRunners: loadRunners }}>
       {children}
     </RunnerContext.Provider>
   );
