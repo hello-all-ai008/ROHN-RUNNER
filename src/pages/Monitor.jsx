@@ -166,38 +166,6 @@ function Monitor() {
             <div className="monitor-name" style={{ fontSize: '4rem', margin: '1rem 0', textAlign: 'center' }}>{displayData.name}</div>
             <div style={{ fontSize: '2.5rem', color: 'var(--text-muted)', marginBottom: '2rem', fontWeight: 500 }}>{displayData.distance} • {displayData.ageGroup}</div>
             <div className="status-badge" style={{ fontSize: '2.5rem', padding: '1rem 3rem' }}>CHECKED IN</div>
-            
-            <button
-              type="button"
-              onClick={() => setActive(false)}
-              style={{
-                marginTop: '2rem',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                color: '#ef4444',
-                border: '2px solid rgba(239, 68, 68, 0.4)',
-                borderRadius: '16px',
-                padding: '0.8rem 2.2rem',
-                cursor: 'pointer',
-                fontWeight: 700,
-                fontSize: '1.4rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.15)',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#ef4444';
-                e.currentTarget.style.color = '#ffffff';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-                e.currentTarget.style.color = '#ef4444';
-              }}
-              title="ปิดการแสดงผลรายชื่อนักวิ่งคนนี้"
-            >
-              <X size={26} /> ปิดแสดงรายชื่อ
-            </button>
           </div>
           
           {displayData.distance && (
