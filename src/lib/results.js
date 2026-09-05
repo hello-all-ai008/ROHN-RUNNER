@@ -84,10 +84,20 @@ export function formatTime(epochMs) {
 
 // Checkpoint scan times are keyed by station UUID, which anon can't resolve
 // to a name — render them generically as "Checkpoint 1", "Checkpoint 2", …
-// sorted by time, with a synthetic "Finish" node appended when applicable.
-export function checkpointTimeline(cps, finish) {
+// sorted by time, with synthetic "Check in"/"Start" nodes prepended and a
+// "Finish" node appended. "Start" is the official gun-start time, shared by
+// every runner in the category (mass start, from the Events "ผูกจุดตรวจและเวลา"
+// config) — distinct from "Check in", which is this runner's own scan time.
+export function checkpointTimeline(cps, finish, checkedInAt, gunStartTime) {
+  const timeline = [];
+  if (checkedInAt) {
+    timeline.push({ label: 'Check in', time: formatTime(new Date(checkedInAt).getTime()) });
+  }
+  if (gunStartTime) {
+    timeline.push({ label: 'Start', time: formatTime(new Date(gunStartTime).getTime()) });
+  }
   const times = Object.values(cps || {}).sort((a, b) => a - b);
-  const timeline = times.map((t, i) => ({ label: `Checkpoint ${i + 1}`, time: formatTime(t) }));
+  times.forEach((t, i) => timeline.push({ label: `Checkpoint ${i + 1}`, time: formatTime(t) }));
   if (finish) {
     timeline.push({ label: 'Finish', time: formatTime(finish) });
   }
