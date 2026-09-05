@@ -15,7 +15,7 @@ function ESlip() {
   const runner = bib ? getRunnerByBib(bib) : null;
   const rank = runner ? computeRank(runner, runners) : null;
   const officialTime = runner ? formatTime(runner.finish) : null;
-  const timeline = runner ? checkpointTimeline(runner.cps, runner.finish) : [];
+  const timeline = runner ? checkpointTimeline(runner.cps, runner.finish, runner.checked_in_at, runner.gun_start_time) : [];
 
   const handleSearch = (e) => {
     e.preventDefault();
