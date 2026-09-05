@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
 import logoFull from '../LOGO/logo-rohn-full.png';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import map5k from '../pic/map5k2.jpg';
 import map10k from '../pic/map10k2.jpg';
 
@@ -17,8 +17,6 @@ function Monitor() {
   const [manualBib, setManualBib] = useState('');
 
   useEffect(() => {
-    let timer = null;
-
     const applyEvent = (evt) => {
       if (!evt) return;
       const targetId = String(evt.monitorId);
@@ -30,8 +28,6 @@ function Monitor() {
           ageGroup: evt.ageGroup || evt.age_group || '' 
         });
         setActive(true);
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => setActive(false), 5000);
       }
     };
 
@@ -55,7 +51,6 @@ function Monitor() {
     window.addEventListener('message', handleMessage);
 
     return () => {
-      if (timer) clearTimeout(timer);
       if (bc) bc.close();
       window.removeEventListener('message', handleMessage);
     };
@@ -128,6 +123,30 @@ function Monitor() {
           <option value="4" style={{ color: '#000' }}>Monitor 4</option>
           <option value="5" style={{ color: '#000' }}>Monitor 5</option>
         </select>
+
+        {active && (
+          <button 
+            type="button" 
+            onClick={() => setActive(false)}
+            style={{
+              backgroundColor: '#ef4444',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '0.5rem 1.2rem',
+              cursor: 'pointer',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.35)',
+              fontSize: '0.95rem'
+            }}
+            title="กดเพื่อปิดการแสดงข้อมูลนักวิ่งคนนี้ และกลับสู่หน้ารอการสแกน"
+          >
+            <X size={18} /> ปิดแสดงรายชื่อ
+          </button>
+        )}
       </div>
 
       <div className="monitor-container" id="idleState" style={{ opacity: active ? 0 : 1, transform: active ? 'scale(0.95)' : 'scale(1)', transition: 'all 0.5s ease', pointerEvents: active ? 'none' : 'auto' }}>
@@ -147,6 +166,38 @@ function Monitor() {
             <div className="monitor-name" style={{ fontSize: '4rem', margin: '1rem 0', textAlign: 'center' }}>{displayData.name}</div>
             <div style={{ fontSize: '2.5rem', color: 'var(--text-muted)', marginBottom: '2rem', fontWeight: 500 }}>{displayData.distance} • {displayData.ageGroup}</div>
             <div className="status-badge" style={{ fontSize: '2.5rem', padding: '1rem 3rem' }}>CHECKED IN</div>
+            
+            <button
+              type="button"
+              onClick={() => setActive(false)}
+              style={{
+                marginTop: '2rem',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                color: '#ef4444',
+                border: '2px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: '16px',
+                padding: '0.8rem 2.2rem',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '1.4rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.15)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#ef4444';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                e.currentTarget.style.color = '#ef4444';
+              }}
+              title="ปิดการแสดงผลรายชื่อนักวิ่งคนนี้"
+            >
+              <X size={26} /> ปิดแสดงรายชื่อ
+            </button>
           </div>
           
           {displayData.distance && (
