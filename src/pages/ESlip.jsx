@@ -56,15 +56,15 @@ function ESlip() {
             src={logoFull} 
             alt="ROHN Logo" 
             style={{ 
-              height: '180px', 
-              maxWidth: '560px',
+              height: '240px', 
+              maxWidth: '680px',
               width: 'auto',
-              marginBottom: '1.5rem', 
-              filter: 'brightness(0) invert(1) drop-shadow(0 0 20px rgba(255,255,255,0.45))' 
+              marginBottom: '0.25rem', 
+              filter: 'brightness(0) invert(1) drop-shadow(0 0 25px rgba(255,255,255,0.5))' 
             }} 
           />
           <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '2px', margin: 0, textTransform: 'uppercase' }}>Finisher Portal</h1>
-          <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: '0.5rem' }}>Enter your BIB number to view your official results</p>
+          <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: '0.4rem' }}>Enter your BIB number to view your official results</p>
         </div>
 
         {/* Search Box */}
