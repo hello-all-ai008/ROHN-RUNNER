@@ -17,13 +17,48 @@ function Monitor() {
   const [manualBib, setManualBib] = useState('');
 
   useEffect(() => {
-    if (castEvent && castEvent.monitorId === monitorId) {
-      setDisplayData({ bib: castEvent.bib, name: castEvent.name, distance: castEvent.distance, ageGroup: castEvent.ageGroup });
-      setActive(true);
-      // Auto-hide after 5 seconds
-      const timer = setTimeout(() => setActive(false), 5000);
-      return () => clearTimeout(timer);
+    let timer = null;
+
+    const applyEvent = (evt) => {
+      if (!evt) return;
+      const targetId = String(evt.monitorId);
+      if (targetId === String(monitorId) || targetId === 'all') {
+        setDisplayData({ 
+          bib: evt.bib || '----', 
+          name: evt.name || 'Runner Name', 
+          distance: evt.distance || '', 
+          ageGroup: evt.ageGroup || evt.age_group || '' 
+        });
+        setActive(true);
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => setActive(false), 5000);
+      }
+    };
+
+    if (castEvent) {
+      applyEvent(castEvent);
     }
+
+    let bc;
+    try {
+      bc = new BroadcastChannel('rohn_monitor_channel');
+      bc.onmessage = (e) => {
+        if (e.data) applyEvent(e.data);
+      };
+    } catch {}
+
+    const handleMessage = (e) => {
+      if (e.data && (e.data.type === 'ROHN_MONITOR_CAST' || e.data.monitorId)) {
+        applyEvent(e.data);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      if (bc) bc.close();
+      window.removeEventListener('message', handleMessage);
+    };
   }, [castEvent, monitorId]);
 
   const handleManualSubmit = (e) => {

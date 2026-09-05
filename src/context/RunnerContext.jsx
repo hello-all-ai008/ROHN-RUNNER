@@ -28,14 +28,34 @@ export const RunnerProvider = ({ children }) => {
 
     const handleStorage = (e) => {
       if (e.key === 'react_runners_v2') {
-        setRunners(JSON.parse(e.newValue));
+        try { setRunners(JSON.parse(e.newValue)); } catch {}
       }
-      if (e.key === 'react_cast_event') {
-        setCastEvent(JSON.parse(e.newValue));
+      if (e.key === 'react_cast_event' || e.key === 'rohn_monitor_cast') {
+        try { setCastEvent(JSON.parse(e.newValue)); } catch {}
       }
     };
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+
+    let bc;
+    try {
+      bc = new BroadcastChannel('rohn_monitor_channel');
+      bc.onmessage = (ev) => {
+        if (ev.data) setCastEvent(ev.data);
+      };
+    } catch {}
+
+    const handleMessage = (ev) => {
+      if (ev.data && (ev.data.type === 'ROHN_MONITOR_CAST' || ev.data.monitorId)) {
+        setCastEvent(ev.data);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('message', handleMessage);
+      if (bc) bc.close();
+    };
   }, []);
 
   const getRunnerByBib = (bib) => {
