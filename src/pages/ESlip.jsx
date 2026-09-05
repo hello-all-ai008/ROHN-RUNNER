@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
 import { ArrowLeft, Search, Medal, Timer, Map, User } from 'lucide-react';
@@ -12,6 +12,10 @@ function ESlip() {
 
   const [searchInput, setSearchInput] = useState(bib || '');
 
+  useEffect(() => {
+    setSearchInput(bib || '');
+  }, [bib]);
+
   const runner = bib ? getRunnerByBib(bib) : null;
   const rank = runner ? computeRank(runner, runners) : null;
   const officialTime = runner ? formatTime(runner.finish) : null;
@@ -21,6 +25,8 @@ function ESlip() {
     e.preventDefault();
     if (searchInput.trim()) {
       navigate(`/eslip/${searchInput.trim()}`);
+    } else {
+      navigate('/eslip');
     }
   };
 
@@ -46,7 +52,17 @@ function ESlip() {
         </Link>
         
         <div style={{ textAlign: 'center', marginBottom: '3rem', marginTop: '3rem' }}>
-          <img src={logoFull} alt="ROHN Logo" style={{ height: '70px', marginBottom: '1rem', filter: 'brightness(0) invert(1) drop-shadow(0 0 15px rgba(255,255,255,0.4))' }} />
+          <img 
+            src={logoFull} 
+            alt="ROHN Logo" 
+            style={{ 
+              height: '115px', 
+              maxWidth: '420px',
+              width: 'auto',
+              marginBottom: '1.2rem', 
+              filter: 'brightness(0) invert(1) drop-shadow(0 0 18px rgba(255,255,255,0.45))' 
+            }} 
+          />
           <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '2px', margin: 0, textTransform: 'uppercase' }}>Finisher Portal</h1>
           <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: '0.5rem' }}>Enter your BIB number to view your official results</p>
         </div>

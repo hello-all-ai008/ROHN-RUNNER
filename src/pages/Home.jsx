@@ -24,7 +24,7 @@ function Home() {
           <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.9rem' }}>Large screen for real-time check-in</p>
         </Link>
 
-        <Link to="/eslip/1001" className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', textDecoration: 'none', color: 'var(--text-main)', transition: 'all 0.3s ease' }}>
+        <Link to="/eslip" className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', textDecoration: 'none', color: 'var(--text-main)', transition: 'all 0.3s ease' }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎟️</div>
           <h3>E-Slip Result</h3>
           <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.9rem' }}>Runner's electronic slip</p>
