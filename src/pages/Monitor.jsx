@@ -85,11 +85,11 @@ function Monitor() {
             value={manualBib}
             onChange={e => setManualBib(e.target.value)}
             style={{ 
-              backgroundColor: 'rgba(255,255,255,0.1)', 
+              backgroundColor: '#ffffff', 
               padding: '0.5rem 1rem', 
               borderRadius: '8px', 
-              color: 'white', 
-              border: '1px solid rgba(255,255,255,0.2)',
+              color: '#000000', 
+              border: '1px solid #cbd5e1',
               outline: 'none',
               width: '120px'
             }}
