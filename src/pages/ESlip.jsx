@@ -56,11 +56,11 @@ function ESlip() {
             src={logoFull} 
             alt="ROHN Logo" 
             style={{ 
-              height: '115px', 
-              maxWidth: '420px',
+              height: '180px', 
+              maxWidth: '560px',
               width: 'auto',
-              marginBottom: '1.2rem', 
-              filter: 'brightness(0) invert(1) drop-shadow(0 0 18px rgba(255,255,255,0.45))' 
+              marginBottom: '1.5rem', 
+              filter: 'brightness(0) invert(1) drop-shadow(0 0 20px rgba(255,255,255,0.45))' 
             }} 
           />
           <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '2px', margin: 0, textTransform: 'uppercase' }}>Finisher Portal</h1>
