@@ -3,18 +3,6 @@ import { supabase } from '../lib/supabaseClient';
 import { CURRENT_EVENT_ID } from '../lib/constants';
 import { normalizeRunner } from '../lib/results';
 
-// Legacy 5-runner mock roster. Kept ONLY to back Scanner.jsx's / Monitor.jsx's
-// checkInRunner() flow (those pages are out of scope and stay on mock data) —
-// it is never merged into the real `runners` state below.
-const initialMockRunners = [
-  { bib: "1001", name: "Tiw Runner", ageGroup: "30-39", gender: "M", distance: "5KM", status: "DNS" },
-  { bib: "1002", name: "Somchai Fast", ageGroup: "20-29", gender: "M", distance: "10KM", status: "DNS" },
-  { bib: "1003", name: "Suda Trail", ageGroup: "30-39", gender: "F", distance: "5KM", status: "DNS" },
-  { bib: "1004", name: "Mana Power", ageGroup: "40-49", gender: "M", distance: "10KM", status: "DNS" },
-  { bib: "1005", name: "Wandee Run", ageGroup: "20-29", gender: "F", distance: "5KM", status: "DNS" }
-];
-
-const MOCK_STORAGE_KEY = 'react_runners_v2';
 const PAGE_SIZE = 1000; // PostgREST caps each request at 1000 rows regardless of a higher client limit.
 
 const RunnerContext = createContext();
@@ -62,10 +50,12 @@ export const RunnerProvider = ({ children }) => {
   useEffect(() => {
     loadRunners();
 
+    // Clean up any legacy mock runners storage key if present
+    try {
+      localStorage.removeItem('react_runners_v2');
+    } catch {}
+
     const handleStorage = (e) => {
-      if (e.key === 'react_runners_v2') {
-        try { setRunners(JSON.parse(e.newValue)); } catch {}
-      }
       if (e.key === 'react_cast_event' || e.key === 'rohn_monitor_cast') {
         try { setCastEvent(JSON.parse(e.newValue)); } catch {}
       }
@@ -114,7 +104,7 @@ export const RunnerProvider = ({ children }) => {
       const row = payload.payload?.record;
       if (!row || !row.bib) return;
       const updated = normalizeRunner(row);
-      setRunners((prev) => prev.map((r) => (r.bib === updated.bib ? { ...r, ...updated } : r)));
+      setRunners((prev) => prev.map((r) => (String(r.bib) === String(updated.bib) ? { ...r, ...updated } : r)));
     });
 
     supabase.realtime.setAuth().then(() => {
@@ -131,39 +121,26 @@ export const RunnerProvider = ({ children }) => {
     };
   }, [loadRunners]);
 
-  const getRunnerByBib = (bib) => runners.find(r => r.bib === bib);
+  const getRunnerByBib = (bib) => {
+    if (!bib) return null;
+    const target = String(bib).trim();
+    return runners.find(r => String(r.bib) === target) || null;
+  };
 
-  // Legacy check-in flow for Scanner.jsx — writes to a mock localStorage
-  // roster only, never to Supabase and never into the real `runners` state.
   const checkInRunner = (bib) => {
-    const stored = localStorage.getItem(MOCK_STORAGE_KEY);
-    const mockRunners = stored ? JSON.parse(stored) : initialMockRunners;
+    if (!bib) return { success: false, message: 'กรุณาระบุหมายเลข BIB' };
+    const target = String(bib).trim();
+    const runner = runners.find(r => String(r.bib) === target);
 
-    let runnerName = "";
-    let runnerDistance = "";
-    let runnerAgeGroup = "";
-    let found = false;
-
-    const newMockRunners = mockRunners.map(r => {
-      if (r.bib === bib) {
-        found = true;
-        runnerName = r.name;
-        runnerDistance = r.distance;
-        runnerAgeGroup = r.ageGroup;
-        return {
-          ...r,
-          status: "CHECKED_IN",
-          checkInTime: new Date().toLocaleString()
-        };
-      }
-      return r;
-    });
-
-    if (found) {
-      localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(newMockRunners));
-      return { success: true, name: runnerName, distance: runnerDistance, ageGroup: runnerAgeGroup };
+    if (runner) {
+      return {
+        success: true,
+        name: runner.name || 'Runner',
+        distance: runner.distance || '',
+        ageGroup: runner.ageGroup || runner.age_group || ''
+      };
     }
-    return { success: false, message: "BIB not found" };
+    return { success: false, message: `ไม่พบหมายเลข BIB "${target}" ในระบบฐานข้อมูล` };
   };
 
   const castToMonitor = (monitorId, bib, name, distance, ageGroup) => {
