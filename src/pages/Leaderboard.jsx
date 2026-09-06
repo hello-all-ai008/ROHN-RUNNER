@@ -173,6 +173,7 @@ function Leaderboard() {
                       <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 800, color: item.male ? '#16a34a' : '#94a3b8' }}>
                         {item.male ? getRunnerDisplayTime(item.male) : '--:--:--'}
                       </div>
+                      {item.male && <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 500 }}>Net Time</div>}
                     </div>
                   </div>
 
@@ -203,6 +204,7 @@ function Leaderboard() {
                       <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 800, color: item.female ? '#16a34a' : '#94a3b8' }}>
                         {item.female ? getRunnerDisplayTime(item.female) : '--:--:--'}
                       </div>
+                      {item.female && <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 500 }}>Net Time</div>}
                     </div>
                   </div>
                 </div>
@@ -248,8 +250,11 @@ function Leaderboard() {
                         <div style={{ fontWeight: 'bold', fontSize: '1.05rem', color: 'var(--text-main)' }}>{r.name}</div>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.04)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>BIB: {r.bib}</div>
                       </div>
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', color: 'var(--success-green)', fontWeight: 'bold' }}>
-                        {getRunnerDisplayTime(r)}
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', color: 'var(--success-green)', fontWeight: 'bold' }}>
+                          {getRunnerDisplayTime(r)}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Net Time</div>
                       </div>
                     </div>
                   </div>

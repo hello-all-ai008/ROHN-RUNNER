@@ -30,10 +30,125 @@ export function isFemale(gender) {
   return g === 'f' || g === 'female' || g.startsWith('หญิง') || g === 'woman';
 }
 
+export function parseTimeToEpoch(timeVal, refTimestamp) {
+  if (timeVal == null || timeVal === '') return null;
+  if (typeof timeVal === 'number') {
+    return isNaN(timeVal) ? null : timeVal;
+  }
+  const s = String(timeVal).trim();
+  if (!s) return null;
+
+  // Numeric epoch string (10 to 13 digits)
+  if (/^\d{10,13}$/.test(s)) {
+    const num = Number(s);
+    return isNaN(num) ? null : num;
+  }
+
+  // Full ISO string or date with '-' or '/'
+  if (s.includes('-') || s.includes('/')) {
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return d.getTime();
+  }
+
+  // Time of day "HH:mm:ss" or "HH:mm"
+  const parts = s.split(':').map(Number);
+  if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+    const baseDate = refTimestamp ? new Date(refTimestamp) : new Date();
+    baseDate.setHours(parts[0] || 0, parts[1] || 0, parts[2] || 0, 0);
+    let epoch = baseDate.getTime();
+    // If refTimestamp was finish and time-of-day start is after finish, start was previous day
+    if (refTimestamp && epoch > refTimestamp) {
+      baseDate.setDate(baseDate.getDate() - 1);
+      epoch = baseDate.getTime();
+    }
+    return epoch;
+  }
+
+  return null;
+}
+
 export function getFinishEpoch(r) {
   if (!r || !r.finish) return null;
-  const t = typeof r.finish === 'number' ? r.finish : new Date(r.finish).getTime();
-  return isNaN(t) ? null : t;
+  return parseTimeToEpoch(r.finish);
+}
+
+export function getRunnerStartTime(runner, refTimestamp) {
+  if (!runner) return null;
+
+  // 1. Explicit start fields
+  const candidates = [
+    runner.gun_start_time,
+    runner.gunStartTime,
+    runner.start_time,
+    runner.startTime,
+    runner.start
+  ];
+
+  for (const c of candidates) {
+    if (c != null && c !== '') {
+      const ep = parseTimeToEpoch(c, refTimestamp);
+      if (ep != null) return ep;
+    }
+  }
+
+  // 2. Check in runner.cps for a start checkpoint or earliest CP
+  if (runner.cps && typeof runner.cps === 'object') {
+    for (const [key, val] of Object.entries(runner.cps)) {
+      if (/start|ปล่อยตัว/i.test(String(key))) {
+        const ep = parseTimeToEpoch(val, refTimestamp);
+        if (ep != null) return ep;
+      }
+    }
+  }
+
+  // 3. Check-in time
+  const checkinVal = runner.checked_in_at || runner.checkin;
+  if (checkinVal != null && checkinVal !== '') {
+    const ep = parseTimeToEpoch(checkinVal, refTimestamp);
+    if (ep != null) return ep;
+  }
+
+  // 4. Earliest checkpoint in cps (if before refTimestamp)
+  if (runner.cps && typeof runner.cps === 'object') {
+    const cpTimes = Object.values(runner.cps)
+      .map(v => parseTimeToEpoch(v, refTimestamp))
+      .filter(t => t != null && (!refTimestamp || t < refTimestamp));
+    if (cpTimes.length > 0) {
+      return Math.min(...cpTimes);
+    }
+  }
+
+  return null;
+}
+
+export function getRunnerNetTime(runner) {
+  if (!runner || !runner.finish) {
+    return { netTimeMs: null, finishEpoch: null, startEpoch: null, isNet: false };
+  }
+
+  const finishEpoch = getFinishEpoch(runner);
+  if (!finishEpoch) {
+    return { netTimeMs: null, finishEpoch: null, startEpoch: null, isNet: false };
+  }
+
+  const startEpoch = getRunnerStartTime(runner, finishEpoch);
+
+  if (startEpoch != null && finishEpoch > startEpoch) {
+    const netTimeMs = finishEpoch - startEpoch;
+    return { netTimeMs, finishEpoch, startEpoch, isNet: true };
+  }
+
+  return { netTimeMs: null, finishEpoch, startEpoch: null, isNet: false };
+}
+
+export function compareRunnerNetTime(a, b) {
+  const aNet = getRunnerNetTime(a);
+  const bNet = getRunnerNetTime(b);
+
+  const aVal = aNet.isNet && aNet.netTimeMs != null ? aNet.netTimeMs : (aNet.finishEpoch || Infinity);
+  const bVal = bNet.isNet && bNet.netTimeMs != null ? bNet.netTimeMs : (bNet.finishEpoch || Infinity);
+
+  return aVal - bVal;
 }
 
 // Group key used consistently for rank + leaderboard grouping so the
@@ -43,6 +158,7 @@ export function groupKey(runner) {
 }
 
 // Compute 1st Male and 1st Female for each distance (regardless of age group)
+// Ranked by Net Time (finish - start)
 export function getOverallLeaders(allRunners) {
   const finished = (allRunners || []).filter((r) => getFinishEpoch(r));
   
@@ -59,11 +175,11 @@ export function getOverallLeaders(allRunners) {
   distanceMap.forEach((runnersInDist, dist) => {
     const males = runnersInDist
       .filter((r) => isMale(r.gender))
-      .sort((a, b) => (getFinishEpoch(a) || 0) - (getFinishEpoch(b) || 0));
+      .sort(compareRunnerNetTime);
 
     const females = runnersInDist
       .filter((r) => isFemale(r.gender))
-      .sort((a, b) => (getFinishEpoch(a) || 0) - (getFinishEpoch(b) || 0));
+      .sort(compareRunnerNetTime);
 
     const male1 = males[0] || null;
     const female1 = females[0] || null;
@@ -83,7 +199,7 @@ export function getOverallLeaders(allRunners) {
   return { overallLeaders, overallWinnerBibs };
 }
 
-// This runner's 1-based position within its group, sorted by finish time
+// This runner's 1-based position within its group, sorted by net time (finish - start)
 // ascending. Supports excluding overall winners (1 คนรับได้แค่ 1 รางวัล)
 export function computeRank(runner, allRunners, excludeOverall = true) {
   if (!runner || !runner.finish) return null;
@@ -103,7 +219,7 @@ export function computeRank(runner, allRunners, excludeOverall = true) {
 
   const group = allRunners
     .filter((r) => getFinishEpoch(r) && groupKey(r) === groupKey(runner) && (!r.bib || !excludeBibs.has(String(r.bib))))
-    .sort((a, b) => (getFinishEpoch(a) || 0) - (getFinishEpoch(b) || 0));
+    .sort(compareRunnerNetTime);
   const index = group.findIndex((r) => String(r.bib) === String(runner.bib));
   return index === -1 ? null : index + 1;
 }
@@ -129,7 +245,7 @@ export function rankMapByBib(allRunners, excludeOverall = true) {
   const ranks = new Map();
   groups.forEach((list) => {
     [...list]
-      .sort((a, b) => (getFinishEpoch(a) || 0) - (getFinishEpoch(b) || 0))
+      .sort(compareRunnerNetTime)
       .forEach((r, i) => ranks.set(String(r.bib), i + 1));
   });
 
@@ -143,7 +259,7 @@ export function rankMapByBib(allRunners, excludeOverall = true) {
   return ranks;
 }
 
-// Top N finishers per distance + age group + gender, sorted by finish time.
+// Top N finishers per distance + age group + gender, sorted by net time (finish - start).
 // Supports excluding overall winners so 1 คนรับได้แค่ 1 รางวัล
 export function topNByGroup(allRunners, n = 5, excludeBibs = new Set()) {
   const groups = new Map();
@@ -160,7 +276,7 @@ export function topNByGroup(allRunners, n = 5, excludeBibs = new Set()) {
   return Array.from(groups.values())
     .map((group) => ({
       ...group,
-      runners: [...group.runners].sort((a, b) => (getFinishEpoch(a) || 0) - (getFinishEpoch(b) || 0)).slice(0, n),
+      runners: [...group.runners].sort(compareRunnerNetTime).slice(0, n),
     }))
     .sort((a, b) => {
       if (a.distance !== b.distance) return a.distance.localeCompare(b.distance, undefined, { numeric: true });
@@ -186,13 +302,14 @@ export function formatTime(epochMs) {
 }
 
 export function getRunnerDisplayTime(r) {
-  const finishMs = getFinishEpoch(r);
-  if (!finishMs) return '--:--:--';
-  const startMs = r.gun_start_time ? new Date(r.gun_start_time).getTime() : (r.checked_in_at ? new Date(r.checked_in_at).getTime() : null);
-  if (startMs && finishMs > startMs) {
-    return formatDuration(finishMs - startMs);
+  const { netTimeMs, finishEpoch, isNet } = getRunnerNetTime(r);
+  if (isNet && netTimeMs != null) {
+    return formatDuration(netTimeMs);
   }
-  return formatTime(finishMs);
+  if (finishEpoch != null) {
+    return formatTime(finishEpoch);
+  }
+  return '--:--:--';
 }
 
 // Checkpoint scan times are keyed by station UUID, which anon can't resolve

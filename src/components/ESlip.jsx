@@ -4,6 +4,7 @@ import logoBaanPong from '../LOGO/logo-BaanPong.jpg';
 import logoMaekhaning from '../LOGO/logo-maekhaning.jpg';
 import logoRohn from '../LOGO/logo-rohn-full.png';
 import logoRohnLabel from '../LOGO/logo-rohn-label.png';
+import { getRunnerNetTime } from '../lib/results';
 
 export default function ESlip({ runner, overallRank, catRank, stations = [] }) {
   if (!runner) return null;
@@ -45,11 +46,7 @@ export default function ESlip({ runner, overallRank, catRank, stations = [] }) {
   // Calculate sorted checkpoints
   const cpEntries = Object.entries(runner.cps || {}).sort((a, b) => Number(a[1]) - Number(b[1]));
 
-  const firstCpOrStartTime = runner.gun_start_time
-    ? new Date(runner.gun_start_time).getTime()
-    : (cpEntries.length > 0 ? Number(cpEntries[0][1]) : (runner.checked_in_at ? new Date(runner.checked_in_at).getTime() : null));
-
-  const netTimeMs = (runner.finish && firstCpOrStartTime) ? (Number(runner.finish) - Number(firstCpOrStartTime)) : null;
+  const { netTimeMs } = getRunnerNetTime(runner);
 
   return (
     <div className="eslip" style={{ position: 'relative' }}>
