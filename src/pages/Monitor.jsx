@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
 import logoFull from '../LOGO/logo-rohn-full.png';
+import logoBaanPong from '../LOGO/logo-BaanPong.jpg';
+import logoMaekhaning from '../LOGO/logo-maekhaning.jpg';
 import { ArrowLeft, X } from 'lucide-react';
 import map5k from '../pic/map5k2.jpg';
 import map10k from '../pic/map10k2.jpg';
@@ -171,15 +173,56 @@ function Monitor() {
           {displayData.distance && (
             <div style={{ 
               flex: '0 0 60%',
-              display: 'flex', justifyContent: 'center', alignItems: 'center', height: '90vh',
+              display: 'flex', 
+              flexDirection: 'column',
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              height: '90vh',
               opacity: 0, // start invisible before animation
               animation: 'slideUpMap 1s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards'
             }}>
               <img 
                 src={displayData.distance === '10KM' ? map10k : map5k} 
                 alt={`${displayData.distance} Map`} 
-                style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', borderRadius: '30px', boxShadow: '0 30px 60px rgba(0,0,0,0.6)', border: '2px solid rgba(255,255,255,0.05)' }} 
+                style={{ 
+                  maxHeight: '68vh', 
+                  maxWidth: '100%', 
+                  objectFit: 'contain', 
+                  borderRadius: '24px', 
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.5)', 
+                  border: '2px solid rgba(255,255,255,0.05)' 
+                }} 
               />
+
+              {/* Logos under map: logo-baanpong, logo-maekhaning, logo-rohn-full */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '2.5rem', 
+                marginTop: '1.2rem',
+                padding: '0.6rem 2.2rem',
+                backgroundColor: '#ffffff',
+                borderRadius: '16px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                border: '1px solid rgba(0,0,0,0.06)'
+              }}>
+                <img 
+                  src={logoBaanPong} 
+                  alt="Logo Baan Pong" 
+                  style={{ height: '60px', width: 'auto', objectFit: 'contain', borderRadius: '8px' }} 
+                />
+                <img 
+                  src={logoMaekhaning} 
+                  alt="Logo Mae Khaning" 
+                  style={{ height: '60px', width: 'auto', objectFit: 'contain', borderRadius: '8px' }} 
+                />
+                <img 
+                  src={logoFull} 
+                  alt="Logo ROHN Full" 
+                  style={{ height: '50px', width: 'auto', objectFit: 'contain' }} 
+                />
+              </div>
             </div>
           )}
         </div>
