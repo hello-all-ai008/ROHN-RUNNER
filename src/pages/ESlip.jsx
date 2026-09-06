@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
-import { ArrowLeft, Search, Medal, Timer, Map, User } from 'lucide-react';
+import { ArrowLeft, Search, Medal, Timer, Map, User, Printer } from 'lucide-react';
 import logoFull from '../LOGO/logo-rohn-full.png';
 import { computeRank, formatTime, checkpointTimeline } from '../lib/results';
+import ESlipModal from '../components/ESlipModal';
 
 function ESlip() {
   const { bib } = useParams();
@@ -11,6 +12,7 @@ function ESlip() {
   const { runners, getRunnerByBib, loading } = useRunner();
 
   const [searchInput, setSearchInput] = useState(bib || '');
+  const [showSlipModal, setShowSlipModal] = useState(false);
 
   useEffect(() => {
     setSearchInput(bib || '');
@@ -18,6 +20,9 @@ function ESlip() {
 
   const runner = bib ? getRunnerByBib(bib) : null;
   const rank = runner ? computeRank(runner, runners) : null;
+  const overallRank = runner?.finish
+    ? runners.filter(r => r.finish && r.distance === runner.distance).sort((a, b) => a.finish - b.finish).findIndex(r => r.bib === runner.bib) + 1
+    : null;
   const officialTime = runner ? formatTime(runner.finish) : null;
   const timeline = runner ? checkpointTimeline(runner.cps, runner.finish, runner.checked_in_at, runner.gun_start_time) : [];
 
@@ -126,9 +131,42 @@ function ESlip() {
                   <h2 style={{ fontSize: '1rem', color: '#d8b4fe', textTransform: 'uppercase', letterSpacing: '3px', margin: '0 0 0.5rem 0' }}>Official Finisher</h2>
                   <h1 style={{ fontSize: '3.5rem', margin: 0, fontWeight: 800, textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{runner.name}</h1>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '2px' }}>BIB No.</div>
-                  <div style={{ fontSize: '4rem', fontWeight: 900, color: '#fff', lineHeight: 1, textShadow: '0 0 20px rgba(157,51,214,0.8)' }}>{runner.bib}</div>
+                <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+                  <button 
+                    type="button"
+                    onClick={() => setShowSlipModal(true)}
+                    title="พิมพ์ e-Slip (Print Official Slip)"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.12)',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      color: '#ffffff',
+                      borderRadius: '14px',
+                      padding: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backdropFilter: 'blur(10px)',
+                      boxShadow: '0 8px 20px rgba(0, 0, 0, 0.25)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+                      e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
+                      e.currentTarget.style.boxShadow = '0 12px 25px rgba(157, 51, 214, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.25)';
+                    }}
+                  >
+                    <Printer size={24} />
+                  </button>
+                  <div>
+                    <div style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '2px' }}>BIB No.</div>
+                    <div style={{ fontSize: '4rem', fontWeight: 900, color: '#fff', lineHeight: 1, textShadow: '0 0 20px rgba(157,51,214,0.8)' }}>{runner.bib}</div>
+                  </div>
                 </div>
               </div>
 
@@ -188,6 +226,15 @@ function ESlip() {
           </div>
         )}
       </div>
+
+      {showSlipModal && runner && (
+        <ESlipModal
+          runner={runner}
+          overallRank={overallRank}
+          catRank={rank}
+          onClose={() => setShowSlipModal(false)}
+        />
+      )}
     </div>
   );
 }
