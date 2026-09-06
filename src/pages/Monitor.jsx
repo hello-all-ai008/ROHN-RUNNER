@@ -152,7 +152,7 @@ function Monitor() {
       </div>
 
       <div className="monitor-container" id="idleState" style={{ opacity: active ? 0 : 1, transform: active ? 'scale(0.95)' : 'scale(1)', transition: 'all 0.5s ease', pointerEvents: active ? 'none' : 'auto' }}>
-        <img src={logoFull} alt="ROHN Logo" style={{ maxWidth: '400px', marginBottom: '2rem' }} />
+        <img src={logoFull} alt="ROHN Logo" style={{ maxWidth: '500px', marginBottom: '2rem' }} />
         <h1 style={{ fontSize: '3rem', color: 'var(--text-muted)' }}>Ready for Check-in</h1>
         <p style={{ color: 'rgba(0,0,0,0.2)', fontSize: '1.5rem', marginTop: '1rem' }}>Waiting for scanner data...</p>
       </div>
@@ -220,7 +220,7 @@ function Monitor() {
                 <img 
                   src={logoFull} 
                   alt="Logo ROHN Full" 
-                  style={{ height: '50px', width: 'auto', objectFit: 'contain' }} 
+                  style={{ height: '78px', width: 'auto', objectFit: 'contain' }} 
                 />
               </div>
             </div>
