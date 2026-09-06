@@ -59,11 +59,12 @@ function ESlip() {
               height: '240px', 
               maxWidth: '680px',
               width: 'auto',
-              marginBottom: '0.25rem', 
+              display: 'block',
+              margin: '0 auto',
               filter: 'brightness(0) invert(1) drop-shadow(0 0 25px rgba(255,255,255,0.5))' 
             }} 
           />
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '2px', margin: 0, textTransform: 'uppercase' }}>Finisher Portal</h1>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '2px', margin: 0, marginTop: '-1.5rem', textTransform: 'uppercase', position: 'relative', zIndex: 1 }}>Finisher Portal</h1>
           <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: '0.4rem' }}>Enter your BIB number to view your official results</p>
         </div>
 
