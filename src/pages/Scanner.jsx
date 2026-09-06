@@ -22,6 +22,7 @@ function Scanner() {
 
     const result = checkInRunner(bibToUse);
     if (result.success) {
+      const officialBib = result.runner?.bib || bibToUse;
       let startTimeStr = null;
       if (result.gunStartTime) {
         const d = new Date(result.gunStartTime);
@@ -30,14 +31,14 @@ function Scanner() {
         }
       }
 
-      castToMonitor(monitorId, bibToUse, result.name, result.distance, result.ageGroup, {
+      castToMonitor(monitorId, officialBib, result.name, result.distance, result.ageGroup, {
         source: 'rohn_runner_scanner',
         gunStartTime: result.gunStartTime
       });
 
       setMessage({ 
         type: 'success', 
-        bib: bibToUse, 
+        bib: officialBib, 
         name: result.name, 
         distance: result.distance, 
         ageGroup: result.ageGroup, 

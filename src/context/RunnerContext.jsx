@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '../lib/supabaseClient';
 import { CURRENT_EVENT_ID } from '../lib/constants';
 import { normalizeRunner } from '../lib/results';
+import { smartFindRunner, normalizeScannedBib } from '../lib/bibUtils';
 
 const PAGE_SIZE = 1000; // PostgREST caps each request at 1000 rows regardless of a higher client limit.
 
@@ -122,15 +123,12 @@ export const RunnerProvider = ({ children }) => {
   }, [loadRunners]);
 
   const getRunnerByBib = (bib) => {
-    if (!bib) return null;
-    const target = String(bib).trim();
-    return runners.find(r => String(r.bib) === target) || null;
+    return smartFindRunner(bib, runners);
   };
 
   const checkInRunner = (bib) => {
     if (!bib) return { success: false, message: 'กรุณาระบุหมายเลข BIB' };
-    const target = String(bib).trim();
-    const runner = runners.find(r => String(r.bib) === target);
+    const runner = smartFindRunner(bib, runners);
 
     if (runner) {
       return {
@@ -142,7 +140,8 @@ export const RunnerProvider = ({ children }) => {
         runner: runner
       };
     }
-    return { success: false, message: `ไม่พบหมายเลข BIB "${target}" ในระบบฐานข้อมูล` };
+    const clean = normalizeScannedBib(bib) || String(bib).trim();
+    return { success: false, message: `ไม่พบหมายเลข BIB "${clean}" ในระบบฐานข้อมูล` };
   };
 
   const castToMonitor = (monitorId, bib, name, distance, ageGroup, extra = {}) => {

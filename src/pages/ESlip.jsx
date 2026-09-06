@@ -4,6 +4,7 @@ import { useRunner } from '../context/RunnerContext';
 import { ArrowLeft, Search, Medal, Timer, Map, User, Printer } from 'lucide-react';
 import logoFull from '../LOGO/logo-rohn-full.png';
 import { computeRank, formatTime, checkpointTimeline } from '../lib/results';
+import { normalizeScannedBib } from '../lib/bibUtils';
 import ESlipModal from '../components/ESlipModal';
 
 function ESlip() {
@@ -28,8 +29,9 @@ function ESlip() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchInput.trim()) {
-      navigate(`/eslip/${searchInput.trim()}`);
+    const clean = normalizeScannedBib(searchInput);
+    if (clean) {
+      navigate(`/eslip/${clean}`);
     } else {
       navigate('/eslip');
     }
@@ -39,7 +41,7 @@ function ESlip() {
     <div style={{ 
       minHeight: '100vh', 
       background: 'linear-gradient(135deg, #020228 0%, #1a0e5b 40%, #591b98 80%, #9d33d6 100%)',
-      padding: '2rem',
+      padding: 'clamp(1rem, 3vw, 2rem)',
       color: '#ffffff',
       display: 'flex',
       flexDirection: 'column',
@@ -61,15 +63,15 @@ function ESlip() {
             src={logoFull} 
             alt="ROHN Logo" 
             style={{ 
-              height: '240px', 
-              maxWidth: '680px',
-              width: 'auto',
+              height: 'auto',
+              maxHeight: '240px', 
+              maxWidth: '100%',
               display: 'block',
               margin: '0 auto',
               filter: 'brightness(0) invert(1) drop-shadow(0 0 25px rgba(255,255,255,0.5))' 
             }} 
           />
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '2px', margin: 0, marginTop: '-1.5rem', textTransform: 'uppercase', position: 'relative', zIndex: 1 }}>Finisher Portal</h1>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', fontWeight: '800', letterSpacing: '2px', margin: 0, marginTop: '-1.5rem', textTransform: 'uppercase', position: 'relative', zIndex: 1 }}>Finisher Portal</h1>
           <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: '0.4rem' }}>Enter your BIB number to view your official results</p>
         </div>
 
@@ -119,17 +121,17 @@ function ESlip() {
           <div style={{ 
             background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', 
             borderRadius: '24px', border: '1px solid rgba(255,255,255,0.15)',
-            padding: '3rem', position: 'relative', overflow: 'hidden',
+            padding: 'clamp(1.5rem, 5vw, 3rem)', position: 'relative', overflow: 'hidden',
             boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
             animation: 'slideUpMap 0.8s cubic-bezier(0.23, 1, 0.32, 1)'
           }}>
             <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(157,51,214,0.4) 0%, rgba(0,0,0,0) 70%)', zIndex: 0 }}></div>
             
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '2rem', marginBottom: '2rem' }}>
-                <div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '2rem', marginBottom: '2rem' }}>
+                <div style={{ flex: '1 1 min-content' }}>
                   <h2 style={{ fontSize: '1rem', color: '#d8b4fe', textTransform: 'uppercase', letterSpacing: '3px', margin: '0 0 0.5rem 0' }}>Official Finisher</h2>
-                  <h1 style={{ fontSize: '3.5rem', margin: 0, fontWeight: 800, textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{runner.name}</h1>
+                  <h1 style={{ fontSize: 'clamp(2rem, 8vw, 3.5rem)', margin: 0, fontWeight: 800, textShadow: '0 2px 10px rgba(0,0,0,0.5)', wordBreak: 'break-word' }}>{runner.name}</h1>
                 </div>
                 <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
                   <button 
@@ -165,7 +167,7 @@ function ESlip() {
                   </button>
                   <div>
                     <div style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '2px' }}>BIB No.</div>
-                    <div style={{ fontSize: '4rem', fontWeight: 900, color: '#fff', lineHeight: 1, textShadow: '0 0 20px rgba(157,51,214,0.8)' }}>{runner.bib}</div>
+                    <div style={{ fontSize: 'clamp(2.5rem, 10vw, 4rem)', fontWeight: 900, color: '#fff', lineHeight: 1, textShadow: '0 0 20px rgba(157,51,214,0.8)' }}>{runner.bib}</div>
                   </div>
                 </div>
               </div>
@@ -202,22 +204,24 @@ function ESlip() {
               </div>
 
               {/* Timeline Alternative */}
-              <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '16px', padding: '2rem' }}>
+              <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '16px', padding: 'clamp(1rem, 3vw, 2rem)' }}>
                 <h3 style={{ margin: '0 0 1.5rem 0', color: 'rgba(255,255,255,0.8)', fontSize: '1.2rem' }}>Race Splits</h3>
                 {timeline.length === 0 ? (
                   <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0 }}>No checkpoint data yet</p>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', marginTop: '2rem' }}>
-                    <div style={{ position: 'absolute', top: '8px', left: '10%', right: '10%', height: '2px', background: 'rgba(255,255,255,0.1)', zIndex: 0 }}></div>
-                    <div style={{ position: 'absolute', top: '8px', left: '10%', width: '80%', height: '2px', background: 'linear-gradient(to right, #591b98, #9d33d6)', zIndex: 0 }}></div>
+                  <div style={{ overflowX: 'auto', paddingBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', marginTop: '2rem', minWidth: 'max-content', gap: '2rem' }}>
+                      <div style={{ position: 'absolute', top: '8px', left: '0', right: '0', height: '2px', background: 'rgba(255,255,255,0.1)', zIndex: 0 }}></div>
+                      <div style={{ position: 'absolute', top: '8px', left: '0', width: '100%', height: '2px', background: 'linear-gradient(to right, #591b98, #9d33d6)', zIndex: 0 }}></div>
 
-                    {timeline.map((split, i) => (
-                      <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#d8b4fe', border: '4px solid #1a0e5b', marginBottom: '1rem', boxShadow: '0 0 15px #d8b4fe' }}></div>
-                        <div style={{ fontSize: '1rem', fontWeight: 'bold' }}>{split.label}</div>
-                        <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>{split.time}</div>
-                      </div>
-                    ))}
+                      {timeline.map((split, i) => (
+                        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 1, minWidth: '60px' }}>
+                          <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#d8b4fe', border: '4px solid #1a0e5b', marginBottom: '1rem', boxShadow: '0 0 15px #d8b4fe' }}></div>
+                          <div style={{ fontSize: '1rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{split.label}</div>
+                          <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>{split.time}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
