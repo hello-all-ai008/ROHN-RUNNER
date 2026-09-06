@@ -137,20 +137,26 @@ export const RunnerProvider = ({ children }) => {
         success: true,
         name: runner.name || 'Runner',
         distance: runner.distance || '',
-        ageGroup: runner.ageGroup || runner.age_group || ''
+        ageGroup: runner.ageGroup || runner.age_group || '',
+        gunStartTime: runner.gun_start_time || null,
+        runner: runner
       };
     }
     return { success: false, message: `ไม่พบหมายเลข BIB "${target}" ในระบบฐานข้อมูล` };
   };
 
-  const castToMonitor = (monitorId, bib, name, distance, ageGroup) => {
+  const castToMonitor = (monitorId, bib, name, distance, ageGroup, extra = {}) => {
     const event = {
+      type: 'ROHN_MONITOR_CAST',
+      source: extra?.source || 'rohn_runner_scanner',
       monitorId: monitorId,
       bib: bib,
       name: name,
       distance: distance,
       ageGroup: ageGroup,
-      timestamp: new Date().getTime()
+      gunStartTime: extra?.gunStartTime || null,
+      timestamp: new Date().getTime(),
+      ...extra
     };
     // Update local state (for same window if needed) and localStorage for other tabs
     setCastEvent(event);

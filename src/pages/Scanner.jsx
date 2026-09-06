@@ -22,8 +22,28 @@ function Scanner() {
 
     const result = checkInRunner(bibToUse);
     if (result.success) {
-      castToMonitor(monitorId, bibToUse, result.name, result.distance, result.ageGroup);
-      setMessage({ type: 'success', bib: bibToUse, name: result.name, distance: result.distance, ageGroup: result.ageGroup, monitorId: monitorId });
+      let startTimeStr = null;
+      if (result.gunStartTime) {
+        const d = new Date(result.gunStartTime);
+        if (!isNaN(d.getTime())) {
+          startTimeStr = d.toLocaleTimeString('th-TH', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        }
+      }
+
+      castToMonitor(monitorId, bibToUse, result.name, result.distance, result.ageGroup, {
+        source: 'rohn_runner_scanner',
+        gunStartTime: result.gunStartTime
+      });
+
+      setMessage({ 
+        type: 'success', 
+        bib: bibToUse, 
+        name: result.name, 
+        distance: result.distance, 
+        ageGroup: result.ageGroup, 
+        startTime: startTimeStr,
+        monitorId: monitorId 
+      });
       if (typeof scannedBib !== 'string') setBib('');
     } else {
       setMessage({ type: 'error', text: result.message });
@@ -73,6 +93,12 @@ function Scanner() {
                   <span style={{ fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Age Group</span>
                   <strong style={{ fontSize: '1.5rem', color: '#111827' }}>{message.ageGroup}</strong>
                 </div>
+                {message.startTime && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gridColumn: '1 / -1', borderTop: '1px dashed #bbf7d0', paddingTop: '0.5rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Start Time</span>
+                    <strong style={{ fontSize: '1.3rem', color: 'var(--success-green)' }}>⏱️ {message.startTime}</strong>
+                  </div>
+                )}
               </div>
             </div>
           )}

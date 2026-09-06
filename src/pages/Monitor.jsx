@@ -8,14 +8,57 @@ import { ArrowLeft, X, GripVertical } from 'lucide-react';
 import map5k from '../pic/map5k2.jpg';
 import map10k from '../pic/map10k2.jpg';
 
+function formatStartDateTime(startVal, fallbackRunners = []) {
+  let dateObj = null;
+  if (startVal) {
+    const d = new Date(startVal);
+    if (!isNaN(d.getTime())) dateObj = d;
+  }
+
+  // Fallback date from other runners in the same event if available
+  let eventDateStr = '13 ก.ย. 2026';
+  if (!dateObj && Array.isArray(fallbackRunners)) {
+    const refRunner = fallbackRunners.find(r => r.gun_start_time);
+    if (refRunner && refRunner.gun_start_time) {
+      const rd = new Date(refRunner.gun_start_time);
+      if (!isNaN(rd.getTime())) {
+        const thaiMonth = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][rd.getMonth()];
+        eventDateStr = `${rd.getDate()} ${thaiMonth} ${rd.getFullYear()}`;
+      }
+    }
+  }
+
+  if (dateObj) {
+    const time = dateObj.toLocaleTimeString('th-TH', {
+      timeZone: 'Asia/Bangkok',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    const thaiMonth = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][dateObj.getMonth()];
+    const date = `${dateObj.getDate()} ${thaiMonth} ${dateObj.getFullYear()}`;
+    return { time, date, hasTime: true };
+  }
+
+  return { time: '--:--:--', date: eventDateStr, hasTime: false };
+}
+
 function Monitor() {
   const { id } = useParams();
   const monitorId = id || '1';
   const navigate = useNavigate();
-  const { castEvent, getRunnerByBib, castToMonitor } = useRunner();
+  const { castEvent, getRunnerByBib, castToMonitor, runners } = useRunner();
   
   const [active, setActive] = useState(false);
-  const [displayData, setDisplayData] = useState({ bib: '----', name: 'Runner Name', distance: '', ageGroup: '' });
+  const [displayData, setDisplayData] = useState({ 
+    bib: '----', 
+    name: 'Runner Name', 
+    distance: '', 
+    ageGroup: '',
+    source: 'rohn_runner_scanner',
+    gunStartTime: null
+  });
   const [manualBib, setManualBib] = useState('');
 
   // Resizable split state (persisted in localStorage)
@@ -72,15 +115,45 @@ function Monitor() {
   }, [leftRatio]);
 
   useEffect(() => {
+    const saved = localStorage.getItem('react_cast_event') || localStorage.getItem('rohn_monitor_cast');
+    if (saved) {
+      try {
+        const evt = JSON.parse(saved);
+        if (evt && (String(evt.monitorId) === String(monitorId) || evt.monitorId === 'all')) {
+          const runner = getRunnerByBib(evt.bib);
+          const gunStartTime = evt.gunStartTime || runner?.gun_start_time || null;
+          const isScanner = evt.source === 'rohn_runner_scanner';
+          setDisplayData({
+            bib: evt.bib || '----',
+            name: evt.name || runner?.name || 'Runner Name',
+            distance: evt.distance || runner?.distance || '',
+            ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
+            source: isScanner ? 'rohn_runner_scanner' : 'rohn_admin_checkin',
+            gunStartTime: gunStartTime
+          });
+          setActive(true);
+        }
+      } catch (e) {}
+    }
+  }, [monitorId, getRunnerByBib]);
+
+  useEffect(() => {
     const applyEvent = (evt) => {
       if (!evt) return;
       const targetId = String(evt.monitorId);
       if (targetId === String(monitorId) || targetId === 'all') {
+        const bib = evt.bib || '----';
+        const runner = getRunnerByBib(bib);
+        const gunStartTime = evt.gunStartTime || runner?.gun_start_time || null;
+        const isScanner = evt.source === 'rohn_runner_scanner';
+
         setDisplayData({ 
-          bib: evt.bib || '----', 
-          name: evt.name || 'Runner Name', 
-          distance: evt.distance || '', 
-          ageGroup: evt.ageGroup || evt.age_group || '' 
+          bib: bib, 
+          name: evt.name || runner?.name || 'Runner Name', 
+          distance: evt.distance || runner?.distance || '', 
+          ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
+          source: isScanner ? 'rohn_runner_scanner' : 'rohn_admin_checkin',
+          gunStartTime: gunStartTime
         });
         setActive(true);
       }
@@ -109,19 +182,28 @@ function Monitor() {
       if (bc) bc.close();
       window.removeEventListener('message', handleMessage);
     };
-  }, [castEvent, monitorId]);
+  }, [castEvent, monitorId, getRunnerByBib]);
 
   const handleManualSubmit = (e) => {
     e.preventDefault();
     if (!manualBib.trim()) return;
     const runner = getRunnerByBib(manualBib.trim());
     if (runner) {
-      castToMonitor(monitorId, runner.bib, runner.name, runner.distance, runner.ageGroup);
+      castToMonitor(monitorId, runner.bib, runner.name, runner.distance, runner.ageGroup, {
+        source: 'rohn_runner_scanner',
+        gunStartTime: runner.gun_start_time
+      });
     } else {
-      castToMonitor(monitorId, manualBib.trim(), 'NOT FOUND', '-', '-');
+      castToMonitor(monitorId, manualBib.trim(), 'NOT FOUND', '-', '-', {
+        source: 'rohn_runner_scanner',
+        gunStartTime: null
+      });
     }
     setManualBib('');
   };
+
+  const effectiveGunStartTime = displayData.gunStartTime || getRunnerByBib(displayData.bib)?.gun_start_time || null;
+  const startInfo = formatStartDateTime(effectiveGunStartTime, runners);
 
   return (
     <div style={{ backgroundColor: 'var(--bg-dark)', height: '100vh', overflow: 'hidden' }} className={active ? 'show-active' : ''}>
@@ -246,7 +328,49 @@ function Monitor() {
             <div className="monitor-bib" style={{ fontSize: 'clamp(5.5rem, 9vw, 10rem)', margin: 0, lineHeight: 1 }}>{displayData.bib}</div>
             <div className="monitor-name" style={{ fontSize: 'clamp(2.5rem, 4vw, 4rem)', margin: '1rem 0', textAlign: 'center', wordBreak: 'break-word' }}>{displayData.name}</div>
             <div style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.5rem)', color: 'var(--text-muted)', marginBottom: '2rem', fontWeight: 500, textAlign: 'center' }}>{displayData.distance} • {displayData.ageGroup}</div>
-            <div className="status-badge" style={{ fontSize: 'clamp(1.5rem, 2.2vw, 2.5rem)', padding: '0.8rem 2.8rem', whiteSpace: 'nowrap' }}>CHECKED IN</div>
+            {displayData.source === 'rohn_admin_checkin' ? (
+              <div className="status-badge" style={{ fontSize: 'clamp(1.5rem, 2.2vw, 2.5rem)', padding: '0.8rem 2.8rem', whiteSpace: 'nowrap' }}>
+                CHECKED IN
+              </div>
+            ) : (
+              <div 
+                className="status-badge" 
+                style={{ 
+                  display: 'inline-flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  padding: '0.6rem 2.4rem', 
+                  borderRadius: '24px',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <div style={{ 
+                  fontSize: 'clamp(0.85rem, 1.2vw, 1.15rem)', 
+                  fontWeight: 700, 
+                  letterSpacing: '1.5px', 
+                  textTransform: 'uppercase',
+                  opacity: 0.9,
+                  marginBottom: '2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>START DATE</span>
+                  <span style={{ opacity: 0.5 }}>•</span>
+                  <span>{startInfo.date}</span>
+                </div>
+                <div style={{ 
+                  fontSize: 'clamp(2.5rem, 4.2vw, 4.5rem)', 
+                  fontWeight: 900, 
+                  letterSpacing: '2px', 
+                  lineHeight: 1.05,
+                  fontFamily: 'monospace'
+                }}>
+                  {startInfo.time}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Resizer Divider Bar */}
