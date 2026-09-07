@@ -3,7 +3,22 @@ import { Link } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
 import logoFull from '../LOGO/logo-rohn-full.png';
 import { ArrowLeft } from 'lucide-react';
-import { formatTime, rankMapByBib } from '../lib/results';
+import { formatTime, rankMapByBib, getRunnerRaceStatus } from '../lib/results';
+import AdvancedTable from '../components/AdvancedTable';
+
+const STATUS_LABEL = {
+  FINISHED: 'Finished',
+  IN_RACE: 'In Race',
+  DNS: 'DNS',
+  DNF: 'DNF',
+};
+
+const STATUS_COLOR = {
+  Finished: 'var(--success-green)',
+  'In Race': 'var(--accent-blue)',
+  DNS: 'var(--text-muted)',
+  DNF: 'var(--warn)',
+};
 
 function Dashboard() {
   // RunnerContext owns the Realtime Broadcast subscription and merges live
@@ -15,14 +30,75 @@ function Dashboard() {
   // computeRank() re-filters/re-sorts the full list on every call.
   const ranks = useMemo(() => rankMapByBib(liveRunners), [liveRunners]);
 
+  // Race-progress status per runner (Finished / In Race / DNS / DNF),
+  // separate from registration_status (check-in desk state).
+  const runnersWithStatus = useMemo(
+    () => liveRunners.map(r => ({ ...r, raceStatusCode: getRunnerRaceStatus(r) })),
+    [liveRunners]
+  );
+
+  const distances = useMemo(() => {
+    const set = new Set();
+    liveRunners.forEach(r => { if (r.distance) set.add(r.distance); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [liveRunners]);
+
   const totalCount = liveRunners.length;
   const checkedInCount = liveRunners.filter(r => r.registration_status === 'CHECKED_IN').length;
-  const finishedCount = liveRunners.filter(r => r.finish).length;
-  const notFinishedCount = totalCount - finishedCount;
+  const finishedCount = runnersWithStatus.filter(r => r.raceStatusCode === 'FINISHED').length;
+  const inRaceCount = runnersWithStatus.filter(r => r.raceStatusCode === 'IN_RACE').length;
 
   const checkInPct = totalCount ? Math.round((checkedInCount / totalCount) * 100) : 0;
   const finishedPct = totalCount ? Math.round((finishedCount / totalCount) * 100) : 0;
-  const notFinishedPct = totalCount ? Math.round((notFinishedCount / totalCount) * 100) : 0;
+  const inRacePct = totalCount ? Math.round((inRaceCount / totalCount) * 100) : 0;
+
+  // DNS/DNF (and Finished/In Race for context) broken down per distance.
+  const perDistanceStats = useMemo(() => {
+    return distances.map(dist => {
+      const inDist = runnersWithStatus.filter(r => r.distance === dist);
+      const count = (status) => inDist.filter(r => r.raceStatusCode === status).length;
+      return {
+        distance: dist,
+        total: inDist.length,
+        finished: count('FINISHED'),
+        inRace: count('IN_RACE'),
+        dns: count('DNS'),
+        dnf: count('DNF'),
+      };
+    });
+  }, [distances, runnersWithStatus]);
+
+  // Row data for the AdvancedTable — columns filter/sort on these fields
+  // directly, so anything that needs to be filterable is pre-formatted here
+  // rather than only computed at render time via col.render.
+  const tableRows = useMemo(() => runnersWithStatus.map(r => {
+    const rank = ranks.get(r.bib) || null;
+    return {
+      ...r,
+      raceStatus: STATUS_LABEL[r.raceStatusCode] || r.raceStatusCode,
+      finishTime: formatTime(r.finish) || '-',
+      checkpointCount: Object.keys(r.cps || {}).length,
+      rankDisplay: rank ? `#${rank}` : '-',
+    };
+  }), [runnersWithStatus, ranks]);
+
+  const columns = useMemo(() => [
+    { key: 'name', label: 'Name', defaultWidth: 180 },
+    { key: 'bib', label: 'BIB', defaultWidth: 90 },
+    { key: 'distance', label: 'Distance', defaultWidth: 100 },
+    { key: 'gender', label: 'Gender', defaultWidth: 90 },
+    { key: 'registration_status', label: 'Reg. Status', defaultWidth: 130 },
+    {
+      key: 'raceStatus',
+      label: 'Race Status',
+      defaultWidth: 110,
+      render: (val) => <span style={{ color: STATUS_COLOR[val], fontWeight: 700 }}>{val}</span>,
+    },
+    { key: 'finishTime', label: 'Finish', defaultWidth: 100 },
+    { key: 'age_group', label: 'Age Grp', defaultWidth: 160 },
+    { key: 'checkpointCount', label: 'Checkpoints', defaultWidth: 100, isNumeric: true, align: 'center' },
+    { key: 'rankDisplay', label: 'Grp Rank', defaultWidth: 90, align: 'center' },
+  ], []);
 
   return (
     <div className="container" style={{ maxWidth: '1400px' }}>
@@ -63,44 +139,53 @@ function Dashboard() {
           <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Finished</div>
         </div>
         <div className="card" style={{ padding: '1.2rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#f97316', marginBottom: '0.5rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px' }}>
-            {notFinishedCount} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 600 }}>/ {totalCount} ({notFinishedPct}%)</span>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-blue)', marginBottom: '0.5rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px' }}>
+            {inRaceCount} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 600 }}>/ {totalCount} ({inRacePct}%)</span>
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Not Yet Finished</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>In Race</div>
         </div>
       </div>
 
-      <div className="card table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>BIB</th>
-              <th>Status</th>
-              <th>Finish</th>
-              <th>Age Grp</th>
-              <th>Checkpoints</th>
-              <th>Grp Rank</th>
-            </tr>
-          </thead>
-          <tbody>
-            {liveRunners.map(r => {
-              const rank = ranks.get(r.bib) || null;
-              const checkpointCount = Object.keys(r.cps || {}).length;
-              return (
-                <tr key={r.bib}>
-                  <td style={{ fontWeight: 600 }}>{r.name}</td>
-                  <td><span style={{ color: 'var(--accent-blue)' }}>{r.bib}</span></td>
-                  <td style={{ color: r.registration_status === 'CHECKED_IN' ? 'var(--success-green)' : 'inherit' }}>{r.registration_status}</td>
-                  <td style={{ color: r.finish ? 'var(--success-green)' : 'inherit', fontWeight: r.finish ? 'bold' : 'normal' }}>{formatTime(r.finish) || '-'}</td>
-                  <td>{r.age_group}</td>
-                  <td>{checkpointCount}</td>
-                  <td>{rank ? `#${rank}` : '-'}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* DNS / DNF breakdown per distance */}
+      {perDistanceStats.length > 0 && (
+        <div style={{ marginBottom: '2rem' }}>
+          <h2 style={{ margin: '0 0 1rem 0', fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>สรุปตามระยะทาง (DNS / DNF)</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            {perDistanceStats.map(s => (
+              <div key={s.distance} className="card" style={{ padding: '1.2rem' }}>
+                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)', marginBottom: '0.85rem' }}>{s.distance} <span style={{ fontWeight: 500, fontSize: '0.85rem', color: 'var(--text-muted)' }}>({s.total} runners)</span></div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', textAlign: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: STATUS_COLOR.Finished }}>{s.finished}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Finished</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: STATUS_COLOR['In Race'] }}>{s.inRace}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>In Race</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: STATUS_COLOR.DNS }}>{s.dns}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>DNS</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: STATUS_COLOR.DNF }}>{s.dnf}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>DNF</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Same per-column filter/search/sort/resize/pin data grid as Mae_khanin_Admin's
+          /dashboard (AdvancedTable), minus its Excel export. */}
+      <div style={{ background: 'var(--bg)', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid var(--line)', padding: '4px', overflowX: 'auto' }}>
+        {tableRows.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>ไม่มีข้อมูลนักวิ่ง</div>
+        ) : (
+          <AdvancedTable columns={columns} data={tableRows} pageSize={100} maxHeight="600px" />
+        )}
       </div>
     </div>
   );

@@ -12,6 +12,15 @@
   --border-color: rgba(0, 0, 0, 0.1);
   --font-main: 'Inter', sans-serif;
   --font-display: 'Outfit', sans-serif;
+
+  /* Aliases so components ported from Mae_khanin_Admin (AdvancedTable) drop
+     in without rewriting their var() references — map onto our own tokens. */
+  --ink: var(--text-main);
+  --ink-2: var(--text-muted);
+  --line: var(--border-color);
+  --bg: var(--bg-card);
+  --bg-soft: #f1f5f9;
+  --warn: #dc2626;
 }
 
 * {
@@ -97,6 +106,37 @@ h1, h2, h3, h4 {
 .btn:active { transform: scale(0.98); }
 .btn-success { background-color: var(--success-green); }
 .btn-success:hover { background-color: #16a34a; }
+
+/* Needed by AdvancedTable.jsx (ported from Mae_khanin_Admin) */
+.btn-sm { padding: 5px 10px; font-size: 12.5px; }
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  cursor: pointer;
+  color: var(--ink-2);
+  flex-shrink: 0;
+}
+.btn-icon:hover { background: var(--bg-soft); color: var(--ink); border-color: var(--ink); }
+.btn-icon.active { color: var(--ink); }
+.btn-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+.search {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  outline: none;
+  font-family: var(--font-main);
+}
+.search:focus { border-color: var(--ink); }
+.th-hover-icon { opacity: 0; transition: opacity 0.2s ease; }
+.th-hover-icon.active { opacity: 1; }
+th:hover .th-hover-icon { opacity: 1; }
 
 /* Specific Screens Styling */
 
