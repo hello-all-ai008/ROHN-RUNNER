@@ -37,9 +37,27 @@ export const DEFAULT_STATIONS = [
   { id: '4f7f4393-8103-4b28-a28a-e015c712d4f5', name: 'Finish', type: 'FINISH', sequence_order: 4 },
 ];
 
+export const DEFAULT_PAGE_CONFIG = {
+  scanner: true,
+  monitor: true,
+  eslip: true,
+  dashboard: true,
+  leaderboard: true,
+  displayMode: 'disabled_badge',
+  notices: {}
+};
+
 export const RunnerProvider = ({ children }) => {
   const [runners, setRunners] = useState([]);
   const [stations, setStations] = useState(DEFAULT_STATIONS);
+  const [pageConfig, setPageConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rohn_runner_page_config') || localStorage.getItem(`rohn_runner_page_config_${CURRENT_EVENT_ID}`);
+      return saved ? { ...DEFAULT_PAGE_CONFIG, ...JSON.parse(saved) } : DEFAULT_PAGE_CONFIG;
+    } catch {
+      return DEFAULT_PAGE_CONFIG;
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [castEvent, setCastEvent] = useState(null);
@@ -99,7 +117,22 @@ export const RunnerProvider = ({ children }) => {
   const loadRunners = useCallback(async () => {
     try {
       const rows = await fetchAllPublicResults();
-      setRunners(rows.map(normalizeRunner));
+      
+      // Check for config row
+      const configRow = rows.find(r => r.bib === 'RUNNER_CONFIG');
+      if (configRow && configRow.cps && typeof configRow.cps === 'object' && Object.keys(configRow.cps).length > 0) {
+        setPageConfig(prev => ({
+          ...prev,
+          ...configRow.cps
+        }));
+        try {
+          localStorage.setItem('rohn_runner_page_config', JSON.stringify(configRow.cps));
+        } catch {}
+      }
+
+      // Filter out config row and system rows from runners list
+      const actualRunners = rows.filter(r => r.bib !== 'RUNNER_CONFIG' && !String(r.bib || '').startsWith('__'));
+      setRunners(actualRunners.map(normalizeRunner));
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load runners');
@@ -166,8 +199,21 @@ export const RunnerProvider = ({ children }) => {
     });
 
     channel.on('broadcast', { event: '*' }, (payload) => {
+      if (payload.event === 'config_update' && payload.payload?.config) {
+        setPageConfig(prev => ({ ...prev, ...payload.payload.config }));
+        try {
+          localStorage.setItem('rohn_runner_page_config', JSON.stringify(payload.payload.config));
+        } catch {}
+        return;
+      }
       const row = payload.payload?.record;
       if (!row || !row.bib) return;
+      if (row.bib === 'RUNNER_CONFIG') {
+        if (row.cps && typeof row.cps === 'object') {
+          setPageConfig(prev => ({ ...prev, ...row.cps }));
+        }
+        return;
+      }
       const updated = normalizeRunner(row);
       setRunners((prev) => prev.map((r) => (String(r.bib) === String(updated.bib) ? { ...r, ...updated } : r)));
     });
@@ -233,7 +279,7 @@ export const RunnerProvider = ({ children }) => {
   };
 
   return (
-    <RunnerContext.Provider value={{ runners, stations, loading, error, getRunnerByBib, checkInRunner, castToMonitor, castEvent, refetchRunners: loadRunners }}>
+    <RunnerContext.Provider value={{ runners, stations, loading, error, pageConfig, getRunnerByBib, checkInRunner, castToMonitor, castEvent, refetchRunners: loadRunners }}>
       {children}
     </RunnerContext.Provider>
   );

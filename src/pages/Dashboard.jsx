@@ -104,13 +104,13 @@ function Dashboard() {
     <div className="container" style={{ maxWidth: '1400px' }}>
       <Link to="/" className="btn-back" style={{ marginBottom: 0 }}><ArrowLeft size={18} /> กลับหน้าหลัก (Home)</Link>
 
-      <div className="flex justify-between items-center" style={{ marginBottom: '2rem', marginTop: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <img src={logoFull} alt="ROHN Logo" style={{ height: '60px' }} />
-          <div style={{ width: '2px', height: '60px', backgroundColor: 'var(--text-muted)', opacity: 0.3 }}></div>
+      <div className="flex justify-between items-center" style={{ marginBottom: '1rem', marginTop: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <img src={logoFull} alt="ROHN Logo" style={{ height: '40px' }} />
+          <div style={{ width: '2px', height: '40px', backgroundColor: 'var(--text-muted)', opacity: 0.3 }}></div>
           <div>
-            <h1 style={{ margin: 0, fontSize: '2.5rem', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-main)', lineHeight: 1 }}>Overall Dashboard</h1>
-            <p style={{ color: 'var(--text-muted)', margin: 0, marginTop: '5px' }}>Live Race Statistics</p>
+            <h1 style={{ margin: 0, fontSize: 'clamp(1.2rem, 4vw, 2rem)', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-main)', lineHeight: 1 }}>Dashboard</h1>
+            <p style={{ color: 'var(--text-muted)', margin: 0, marginTop: '2px', fontSize: '0.8rem' }}>Live Statistics</p>
           </div>
         </div>
       </div>
@@ -119,57 +119,57 @@ function Dashboard() {
         <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Loading results...</p>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <div className="card" style={{ padding: '1.2rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--ink)', marginBottom: '0.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
+        <div className="card" style={{ padding: '0.8rem 0.5rem', textAlign: 'center' }}>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--ink)', marginBottom: '0.2rem' }}>
             {totalCount}
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Total Runners</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>Total</div>
         </div>
-        <div className="card" style={{ padding: '1.2rem', textAlign: 'center', background: 'linear-gradient(145deg, var(--bg-card) 0%, rgba(37, 99, 235, 0.05) 100%)' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-blue)', marginBottom: '0.5rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px' }}>
-            {checkedInCount} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 600 }}>/ {totalCount} ({checkInPct}%)</span>
+        <div className="card" style={{ padding: '0.8rem 0.5rem', textAlign: 'center', background: 'linear-gradient(145deg, var(--bg-card) 0%, rgba(37, 99, 235, 0.05) 100%)' }}>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-blue)', marginBottom: '0.2rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
+            {checkedInCount} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>/ {totalCount} ({checkInPct}%)</span>
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Checked In</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>Checked In</div>
         </div>
-        <div className="card" style={{ padding: '1.2rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--success-green)', marginBottom: '0.5rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px' }}>
-            {finishedCount} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 600 }}>/ {totalCount} ({finishedPct}%)</span>
+        <div className="card" style={{ padding: '0.8rem 0.5rem', textAlign: 'center' }}>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--success-green)', marginBottom: '0.2rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
+            {finishedCount} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>/ {totalCount} ({finishedPct}%)</span>
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Finished</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>Finished</div>
         </div>
-        <div className="card" style={{ padding: '1.2rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-blue)', marginBottom: '0.5rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px' }}>
-            {inRaceCount} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 600 }}>/ {totalCount} ({inRacePct}%)</span>
+        <div className="card" style={{ padding: '0.8rem 0.5rem', textAlign: 'center' }}>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-blue)', marginBottom: '0.2rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
+            {inRaceCount} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>/ {totalCount} ({inRacePct}%)</span>
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>In Race</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>In Race</div>
         </div>
       </div>
 
       {/* DNS / DNF breakdown per distance */}
       {perDistanceStats.length > 0 && (
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ margin: '0 0 1rem 0', fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>สรุปตามระยะทาง (DNS / DNF)</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+        <div style={{ marginBottom: '1rem' }}>
+          <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)' }}>Summary by Distance</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem' }}>
             {perDistanceStats.map(s => (
-              <div key={s.distance} className="card" style={{ padding: '1.2rem' }}>
-                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)', marginBottom: '0.85rem' }}>{s.distance} <span style={{ fontWeight: 500, fontSize: '0.85rem', color: 'var(--text-muted)' }}>({s.total} runners)</span></div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', textAlign: 'center' }}>
+              <div key={s.distance} className="card" style={{ padding: '0.8rem 0.5rem' }}>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.5rem', textAlign: 'center' }}>{s.distance} <span style={{ fontWeight: 600, fontSize: '0.7rem', color: 'var(--text-muted)' }}>({s.total})</span></div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.2rem', textAlign: 'center' }}>
                   <div>
-                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: STATUS_COLOR.Finished }}>{s.finished}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Finished</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: STATUS_COLOR.Finished }}>{s.finished}</div>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 600 }}>FIN</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: STATUS_COLOR['In Race'] }}>{s.inRace}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>In Race</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: STATUS_COLOR['In Race'] }}>{s.inRace}</div>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 600 }}>IN</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: STATUS_COLOR.DNS }}>{s.dns}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>DNS</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: STATUS_COLOR.DNS }}>{s.dns}</div>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 600 }}>DNS</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: STATUS_COLOR.DNF }}>{s.dnf}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>DNF</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: STATUS_COLOR.DNF }}>{s.dnf}</div>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 600 }}>DNF</div>
                   </div>
                 </div>
               </div>

@@ -357,12 +357,12 @@ const AdvancedTable = ({ columns: rawColumns = [], data, groupBy = null, pageSiz
         <div className={cn("flex flex-col relative w-full", className)} style={{ height: maxHeight, background: 'var(--bg)', minWidth: 0, maxWidth: '100%', overflow: 'hidden', borderRadius: '10px', border: '1px solid var(--line)' }}>
 
             {/* Toolbar */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--line)', flexWrap: 'wrap', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '14px', color: 'var(--ink-2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderBottom: '1px solid var(--line)', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', width: '100%' }}>
+                    <span style={{ fontSize: '14px', color: 'var(--ink-2)', whiteSpace: 'nowrap' }}>
                         <b style={{ color: 'var(--ink)' }}>{processedData.length}</b> records
                     </span>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', flex: '1 1 200px' }}>
                         <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                             <Search size={14} className="text-slate-400" />
                         </div>
@@ -372,7 +372,7 @@ const AdvancedTable = ({ columns: rawColumns = [], data, groupBy = null, pageSiz
                             value={likeFilters.bib || ''}
                             onChange={e => handleLikeFilterChange('bib', e.target.value)}
                             className="search"
-                            style={{ paddingLeft: '32px', width: '200px', margin: 0, fontSize: '13px' }}
+                            style={{ paddingLeft: '32px', width: '100%', margin: 0, fontSize: '13px' }}
                         />
                     </div>
                 </div>
@@ -629,7 +629,8 @@ const AdvancedTable = ({ columns: rawColumns = [], data, groupBy = null, pageSiz
                                                 left: stickyStyles[col.key]?.left,
                                                 zIndex: stickyStyles[col.key] ? 20 : undefined,
                                                 background: frozenColumns.includes(col.key) ? 'var(--bg)' : undefined,
-                                                textAlign: col.align || 'left'
+                                                textAlign: col.align || 'left',
+                                                padding: '12px 8px'
                                             }}
                                         >
                                             {col.render
@@ -692,8 +693,8 @@ const AdvancedTable = ({ columns: rawColumns = [], data, groupBy = null, pageSiz
             </div>
 
             {/* Pagination Controls */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderTop: '1px solid var(--line)', background: 'var(--bg)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '16px', padding: '16px', borderTop: '1px solid var(--line)', background: 'var(--bg)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1 1 100%' }}>
                     <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink)' }}>
                         Page {currentPage} of {totalPages === 0 ? 1 : totalPages}
                     </span>
@@ -702,9 +703,18 @@ const AdvancedTable = ({ columns: rawColumns = [], data, groupBy = null, pageSiz
                     </span>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 justify-center" style={{ flexWrap: 'wrap' }}>
                     <button
                         onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
+                        className="btn-icon"
+                        style={{ width: '32px', height: '32px', borderRadius: '8px', padding: 0 }}
+                        title="First Page"
+                    >
+                        <ChevronsLeft size={20} />
+                    </button>
+                    <button
+                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
                         className="btn-icon"
                         style={{ width: '32px', height: '32px', borderRadius: '8px', padding: 0 }}
@@ -713,11 +723,9 @@ const AdvancedTable = ({ columns: rawColumns = [], data, groupBy = null, pageSiz
                         <ChevronLeft size={20} />
                     </button>
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        // Simple pagination logic to show limited pages
                         let p = i + 1;
                         if (totalPages > 5 && currentPage > 3) {
                             p = currentPage - 2 + i;
-                            // Adjust if we are near the end
                             if (p > totalPages - 4) {
                                 p = totalPages - 4 + i;
                             }
@@ -741,6 +749,15 @@ const AdvancedTable = ({ columns: rawColumns = [], data, groupBy = null, pageSiz
                     })}
                     <button
                         onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                        className="btn-icon"
+                        style={{ width: '32px', height: '32px', borderRadius: '8px', padding: 0 }}
+                        title="Next Page"
+                    >
+                        <ChevronRight size={20} />
+                    </button>
+                    <button
+                        onClick={() => handlePageChange(totalPages)}
                         disabled={currentPage === totalPages}
                         className="btn-icon"
                         style={{ width: '32px', height: '32px', borderRadius: '8px', padding: 0 }}
