@@ -4,16 +4,17 @@ import logoFull from '../LOGO/logo-rohn-full.png';
 import { ArrowLeft, Trophy, Medal } from 'lucide-react';
 import { useRunner } from '../context/RunnerContext';
 import { topNByGroup, getOverallLeaders, getRunnerDisplayTime } from '../lib/results';
+import { formatEnglishLabel } from '../components/ESlip';
 
 function Leaderboard() {
   const { runners, loading } = useRunner();
   const [selectedDistance, setSelectedDistance] = useState('ALL');
 
-  // Extract unique distances
+  // Extract unique distances (excluding 5KM)
   const distances = useMemo(() => {
     const set = new Set();
     (runners || []).forEach((r) => {
-      if (r.distance) set.add(r.distance);
+      if (r.distance && r.distance !== '5KM' && r.distance !== '5km' && r.distance !== '5 KM') set.add(r.distance);
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   }, [runners]);
@@ -24,8 +25,9 @@ function Leaderboard() {
   }, [runners]);
 
   const filteredOverall = useMemo(() => {
-    if (selectedDistance === 'ALL') return overallLeaders;
-    return overallLeaders.filter((item) => item.distance === selectedDistance);
+    const list = overallLeaders.filter(item => item.distance !== '5KM' && item.distance !== '5km' && item.distance !== '5 KM');
+    if (selectedDistance === 'ALL') return list;
+    return list.filter((item) => item.distance === selectedDistance);
   }, [overallLeaders, selectedDistance]);
 
   // จัดอันดับตามรุ่นอายุ (ตัดคนที่ได้ Overall ออก เพื่อให้ 1 คนรับได้ 1 รางวัล)
@@ -34,12 +36,120 @@ function Leaderboard() {
   }, [runners, overallWinnerBibs]);
 
   const filteredGroups = useMemo(() => {
-    if (selectedDistance === 'ALL') return groups;
-    return groups.filter((g) => g.distance === selectedDistance);
+    const list = groups.filter(g => g.distance !== '5KM' && g.distance !== '5km' && g.distance !== '5 KM');
+    if (selectedDistance === 'ALL') return list;
+    return list.filter((g) => g.distance === selectedDistance);
   }, [groups, selectedDistance]);
 
   return (
     <div className="lb-page-container">
+      <style>{`
+        .groups-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 1rem;
+          padding: 0 1.25rem;
+        }
+        .groups-grid > div {
+          background: #ffffff;
+          border: 1px solid rgba(0,0,0,0.06);
+          border-radius: 12px;
+          padding: 1rem;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        }
+        @media (max-width: 768px) {
+          .groups-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 0.45rem !important;
+            padding: 0 0.4rem !important;
+          }
+          .groups-grid > div {
+            padding: 0.5rem 0.45rem !important;
+            border-radius: 8px !important;
+          }
+          .leaderboard-row {
+            padding: 0.15rem 0 !important;
+            min-height: 0 !important;
+            margin-bottom: 0.15rem !important;
+            gap: 4px !important;
+          }
+          .leaderboard-row .rank {
+            width: 16px !important;
+            height: 16px !important;
+            font-size: 0.6rem !important;
+            min-width: 16px !important;
+          }
+          .leaderboard-row > div:nth-child(2) {
+            gap: 4px !important;
+            min-width: 0 !important;
+          }
+          .leaderboard-row > div:nth-child(2) > div:first-child {
+            gap: 3px !important;
+            min-width: 0 !important;
+            flex: 1 !important;
+          }
+          .leaderboard-row > div:nth-child(2) > div:first-child > div:first-child {
+            font-size: 0.68rem !important;
+            line-height: 1.15 !important;
+            max-width: 65px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .leaderboard-row > div:nth-child(2) > div:first-child > div:last-child {
+            font-size: 0.52rem !important;
+            padding: 1px 3px !important;
+            white-space: nowrap;
+          }
+          .leaderboard-row > div:nth-child(2) > div:last-child {
+            flex-shrink: 0 !important;
+          }
+          .leaderboard-row > div:nth-child(2) > div:last-child > div:first-child {
+            font-size: 0.68rem !important;
+          }
+          .leaderboard-row > div:nth-child(2) > div:last-child > div:last-child {
+            font-size: 0.46rem !important;
+          }
+          .groups-grid > div > div:first-child {
+            font-size: 0.72rem !important;
+            margin-bottom: 0.35rem !important;
+            padding-left: 0.35rem !important;
+            border-left-width: 3px !important;
+            gap: 3px !important;
+            line-height: 1.2 !important;
+          }
+          .groups-grid > div > div:first-child span {
+             font-size: 0.72rem !important;
+          }
+          .overall-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.5rem !important;
+          }
+          .overall-item-card {
+            padding: 0.6rem !important;
+          }
+          .overall-champ-row {
+            padding: 0.4rem 0.5rem !important;
+            gap: 0.4rem !important;
+          }
+          .overall-champ-row > div:first-child > div:first-child {
+             width: 24px !important;
+             height: 24px !important;
+             font-size: 0.6rem !important;
+          }
+          .lb-header-section {
+            padding: 0.75rem 0.5rem !important;
+          }
+          .lb-section-pad {
+            padding: 0 0.4rem !important;
+            margin-bottom: 0.75rem !important;
+          }
+          h2 {
+            font-size: 0.95rem !important;
+          }
+        }
+      `}</style>
       {/* Header */}
       <div className="lb-header-section">
         <div>
@@ -143,8 +253,8 @@ function Leaderboard() {
                   {/* Male Champion */}
                   <div className="overall-champ-row male">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
-                      <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '12px', flexShrink: 0 }}>
-                        ชาย
+                      <div style={{ width: '36px', height: '30px', borderRadius: '8px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '11px', flexShrink: 0 }}>
+                        Male
                       </div>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         {item.male ? (
@@ -154,7 +264,7 @@ function Leaderboard() {
                             </div>
                             <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                               <span style={{ fontWeight: 700, color: '#0284c7' }}>BIB: {item.male.bib}</span>
-                              {item.male.age_group && <span>· รุ่น {item.male.age_group}</span>}
+                              {item.male.age_group && <span>· {formatEnglishLabel(item.male.age_group)}</span>}
                             </div>
                           </>
                         ) : (
@@ -174,8 +284,8 @@ function Leaderboard() {
                   {/* Female Champion */}
                   <div className="overall-champ-row female">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
-                      <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: '#fce7f3', color: '#db2777', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '12px', flexShrink: 0 }}>
-                        หญิง
+                      <div style={{ width: '46px', height: '30px', borderRadius: '8px', background: '#fce7f3', color: '#db2777', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '11px', flexShrink: 0 }}>
+                        Female
                       </div>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         {item.female ? (
@@ -185,7 +295,7 @@ function Leaderboard() {
                             </div>
                             <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                               <span style={{ fontWeight: 700, color: '#db2777' }}>BIB: {item.female.bib}</span>
-                              {item.female.age_group && <span>· รุ่น {item.female.age_group}</span>}
+                              {item.female.age_group && <span>· {formatEnglishLabel(item.female.age_group)}</span>}
                             </div>
                           </>
                         ) : (
@@ -224,11 +334,12 @@ function Leaderboard() {
 
       <div className="groups-grid">
         {filteredGroups.map((group, gIdx) => (
-          <div key={`${group.distance}_${group.age_group}_${group.gender}_${gIdx}`} style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 15px rgba(0,0,0,0.04)' }}>
-            <div style={{ fontSize: '1.3rem', color: 'var(--text-main)', marginBottom: '1rem', borderLeft: '4px solid var(--accent-blue)', paddingLeft: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div key={`${group.distance}_${group.age_group}_${group.gender}_${gIdx}`}>
+            <div style={{ fontSize: '1.05rem', color: 'var(--text-main)', marginBottom: '0.75rem', borderLeft: '4px solid var(--accent-blue)', paddingLeft: '0.6rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
               <span style={{ color: 'var(--accent-blue)' }}>{group.distance}</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>|</span>
-              {group.age_group} <span style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: '1.1rem' }}>({group.gender})</span>
+              <span style={{ color: 'var(--text-muted)', opacity: 0.5 }}>|</span>
+              <span>{formatEnglishLabel(group.age_group)}</span>
+              <span style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: '0.9em' }}>({formatEnglishLabel(group.gender)})</span>
             </div>
 
             {[...Array(5)].map((_, i) => {
