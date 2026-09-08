@@ -144,10 +144,14 @@ export function groupKey(runner) {
 }
 
 // Compute 1st Male and 1st Female for each distance (regardless of age group)
-// Ranked by Net Time (finish - start)
+// Ranked by Net Time (finish - start). Overall ranking only applies to 10KM;
+// 5KM has no Overall Champion and its top finishers are ranked normally
+// within their age group instead.
 export function getOverallLeaders(allRunners) {
-  const finished = (allRunners || []).filter((r) => getFinishEpoch(r));
-  
+  const finished = (allRunners || [])
+    .filter((r) => getFinishEpoch(r))
+    .filter((r) => !/^5\s*KM/i.test(r.distance || ''));
+
   const distanceMap = new Map();
   finished.forEach((r) => {
     const dist = r.distance || 'Unknown';
@@ -245,6 +249,15 @@ export function rankMapByBib(allRunners, excludeOverall = true) {
   return ranks;
 }
 
+// Extracts the minimum age from a Thai/English age-group label so groups can
+// sort youngest-first (plain string sort misorders labels like "ไม่เกิน 29 ปี").
+function parseAgeGroupMin(label) {
+  if (!label) return Infinity;
+  if (/ไม่เกิน|and under/i.test(label)) return 0;
+  const match = label.match(/\d+/);
+  return match ? parseInt(match[0], 10) : Infinity;
+}
+
 // Top N finishers per distance + age group + gender, sorted by net time (finish - start).
 // Supports excluding overall winners so 1 คนรับได้แค่ 1 รางวัล
 export function topNByGroup(allRunners, n = 5, excludeBibs = new Set()) {
@@ -267,7 +280,7 @@ export function topNByGroup(allRunners, n = 5, excludeBibs = new Set()) {
     .sort((a, b) => {
       if (a.distance !== b.distance) return a.distance.localeCompare(b.distance, undefined, { numeric: true });
       if (a.gender !== b.gender) return a.gender.localeCompare(b.gender);
-      return (a.age_group || '').localeCompare(b.age_group || '');
+      return parseAgeGroupMin(a.age_group) - parseAgeGroupMin(b.age_group);
     });
 }
 
@@ -284,7 +297,27 @@ export function formatTime(epochMs) {
   if (!epochMs) return null;
   const t = typeof epochMs === 'number' ? epochMs : new Date(epochMs).getTime();
   if (isNaN(t)) return null;
-  return new Date(t).toLocaleTimeString('th-TH', { hour12: false });
+  return new Date(t).toLocaleTimeString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    hour12: false,
+  });
+}
+
+// Race-progress status, independent of registration_status (check-in desk
+// state). DNF requires a per-category FINISH cutoff (finish_cutoff_time,
+// exposed to anon via the public_results view) — until that's configured
+// per category (Events > ผูกจุดตรวจและเวลา), no runner ever resolves to DNF.
+export function getRunnerRaceStatus(runner) {
+  if (runner.finish) return 'FINISHED';
+
+  const started = Boolean(runner.checked_in_at)
+    || Object.keys(runner.cps || {}).length > 0;
+  if (!started) return 'DNS';
+
+  const cutoff = runner.finish_cutoff_time ? new Date(runner.finish_cutoff_time).getTime() : null;
+  if (cutoff && Date.now() > cutoff) return 'DNF';
+
+  return 'IN_RACE';
 }
 
 export function getRunnerDisplayTime(r) {
