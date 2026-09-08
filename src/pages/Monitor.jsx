@@ -49,17 +49,18 @@ function Monitor() {
   const monitorId = id || '1';
   const navigate = useNavigate();
   const { castEvent, getRunnerByBib, castToMonitor, runners } = useRunner();
-  
+
   const [active, setActive] = useState(false);
-  const [displayData, setDisplayData] = useState({ 
-    bib: '----', 
-    name: 'Runner Name', 
-    distance: '', 
+  const [displayData, setDisplayData] = useState({
+    bib: '----',
+    name: 'Runner Name',
+    distance: '',
     ageGroup: '',
     source: 'rohn_runner_scanner',
     gunStartTime: null
   });
   const [manualBib, setManualBib] = useState('');
+  const [showControls, setShowControls] = useState(false);
 
   // Resizable split state (persisted in localStorage)
   const [leftRatio, setLeftRatio] = useState(() => {
@@ -97,7 +98,7 @@ function Monitor() {
         isDraggingRef.current = false;
         try {
           localStorage.setItem('rohn_monitor_split_ratio', String(leftRatio));
-        } catch {}
+        } catch { }
       }
     };
 
@@ -133,7 +134,7 @@ function Monitor() {
           });
           setActive(true);
         }
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [monitorId, getRunnerByBib]);
 
@@ -147,10 +148,10 @@ function Monitor() {
         const gunStartTime = evt.gunStartTime || runner?.gun_start_time || null;
         const isScanner = evt.source === 'rohn_runner_scanner';
 
-        setDisplayData({ 
-          bib: bib, 
-          name: evt.name || runner?.name || 'Runner Name', 
-          distance: evt.distance || runner?.distance || '', 
+        setDisplayData({
+          bib: bib,
+          name: evt.name || runner?.name || 'Runner Name',
+          distance: evt.distance || runner?.distance || '',
           ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
           source: isScanner ? 'rohn_runner_scanner' : 'rohn_admin_checkin',
           gunStartTime: gunStartTime
@@ -169,7 +170,7 @@ function Monitor() {
       bc.onmessage = (e) => {
         if (e.data) applyEvent(e.data);
       };
-    } catch {}
+    } catch { }
 
     const handleMessage = (e) => {
       if (e.data && (e.data.type === 'ROHN_MONITOR_CAST' || e.data.monitorId)) {
@@ -207,82 +208,204 @@ function Monitor() {
 
   return (
     <div style={{ backgroundColor: 'var(--bg-dark)', height: '100vh', overflow: 'hidden' }} className={active ? 'show-active' : ''}>
-      <Link to="/" className="btn-back" style={{ position: 'absolute', top: '2rem', left: '2rem' }}><ArrowLeft size={18} /> กลับหน้าหลัก (Home)</Link>
-      
-      <div style={{ position: 'absolute', top: '2rem', right: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', zIndex: 10 }}>
-        <form onSubmit={handleManualSubmit} style={{ display: 'flex', gap: '8px' }}>
-          <input 
-            type="text" 
-            placeholder="Manual BIB" 
-            value={manualBib}
-            onChange={e => setManualBib(e.target.value)}
-            style={{ 
-              backgroundColor: '#ffffff', 
-              padding: '0.5rem 1rem', 
-              borderRadius: '8px', 
-              color: '#000000', 
-              border: '1px solid #cbd5e1',
-              outline: 'none',
-              width: '120px'
-            }}
-          />
-          <button type="submit" style={{
-            backgroundColor: 'var(--accent-blue)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '0.5rem 1rem',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}>Enter</button>
-        </form>
+      <style>{`
+        @media (max-width: 768px) {
+          #activeState, #idleState {
+            flex-direction: column !important;
+            padding: 1rem !important;
+            padding-top: 8.5rem !important;
+            justify-content: flex-start !important;
+          }
+          #activeState > div:first-child {
+            flex: 0 0 auto !important;
+            width: 100% !important;
+            padding: 0.5rem !important;
+          }
+          #activeState > div:first-child .monitor-bib {
+            font-size: clamp(3.5rem, 15vw, 5rem) !important;
+          }
+          #activeState > div:first-child .monitor-name {
+            font-size: clamp(1.2rem, 7vw, 2rem) !important;
+            margin: 0.2rem 0 !important;
+          }
+          #activeState > div:first-child > div:nth-child(3) {
+            font-size: clamp(0.9rem, 4vw, 1.2rem) !important;
+            margin-bottom: 0.5rem !important;
+          }
+          .resizer-bar {
+            display: none !important;
+          }
+          #activeState > div:last-child {
+            flex: 1 1 auto !important;
+            width: 100% !important;
+            height: auto !important;
+            padding: 0 !important;
+            justify-content: center !important;
+          }
+          #activeState > div:last-child img:first-child {
+            max-height: 40vh !important;
+          }
+          .monitor-logos {
+            gap: 1rem !important;
+            padding: 0.5rem 1rem !important;
+            margin-top: 0.5rem !important;
+          }
+          .monitor-logos img {
+            height: 30px !important;
+          }
+          .status-badge {
+            padding: 0.5rem 1.5rem !important;
+            font-size: clamp(1rem, 5vw, 1.2rem) !important;
+          }
+          .status-badge > div:last-child {
+             font-size: clamp(1.5rem, 6vw, 2rem) !important;
+          }
+          .top-controls-wrapper {
+            top: 0.8rem !important;
+            right: 0.8rem !important;
+            align-items: flex-end !important;
+          }
+          .top-controls {
+            flex-wrap: wrap !important;
+            justify-content: flex-end !important;
+            max-width: 90vw !important;
+            gap: 0.5rem !important;
+            padding: 0.8rem !important;
+          }
+          .top-controls form {
+            width: 100%;
+            justify-content: flex-end;
+          }
+          .top-controls form input {
+            width: 80px !important;
+            padding: 0.3rem 0.5rem !important;
+            font-size: 0.8rem !important;
+          }
+          .top-controls form button, .top-controls select, .top-controls > button {
+            padding: 0.3rem 0.6rem !important;
+            font-size: 0.8rem !important;
+          }
+          .btn-back {
+            top: 0.8rem !important;
+            left: 0.8rem !important;
+            padding: 0.4rem 0.8rem !important;
+            font-size: 0.85rem !important;
+            background: rgba(0,0,0,0.5) !important;
+            border-radius: 8px !important;
+          }
+        }
+      `}</style>
+      <Link to="/" className="btn-back" style={{ position: 'absolute', top: '2rem', left: '2rem', zIndex: 20 }}><ArrowLeft size={18} /> กลับหน้าหลัก (Home)</Link>
 
-        <div style={{ width: '1px', height: '30px', backgroundColor: 'rgba(255,255,255,0.2)' }}></div>
-
-        <label style={{ color: 'var(--text-muted)', fontWeight: 600 }}>เลือกจอ:</label>
-        <select 
-          value={monitorId} 
-          onChange={(e) => navigate(`/monitor/${e.target.value}`)}
-          style={{ 
-            backgroundColor: 'rgba(255,255,255,0.1)', 
-            padding: '0.5rem 1rem', 
-            borderRadius: '8px', 
-            color: 'var(--text-main)', 
-            fontWeight: 'bold',
+      <div className="top-controls-wrapper" style={{ position: 'absolute', top: '2rem', right: '2rem', zIndex: 30, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+        <button
+          onClick={() => setShowControls(!showControls)}
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.15)',
             border: '1px solid rgba(255,255,255,0.2)',
-            outline: 'none',
-            cursor: 'pointer'
+            borderRadius: '50px',
+            padding: '0.5rem 1.2rem',
+            color: '#000',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            backdropFilter: 'blur(10px)',
+            fontWeight: 600,
+            transition: 'all 0.2s ease',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
           }}
         >
-          <option value="1" style={{ color: '#000' }}>Monitor 1</option>
-          <option value="2" style={{ color: '#000' }}>Monitor 2</option>
-          <option value="3" style={{ color: '#000' }}>Monitor 3</option>
-          <option value="4" style={{ color: '#000' }}>Monitor 4</option>
-          <option value="5" style={{ color: '#000' }}>Monitor 5</option>
-        </select>
+          {showControls ? <X size={16} /> : '⚙️'} {showControls ? 'ซ่อน (Close)' : 'ตั้งค่า (Settings)'}
+        </button>
 
-        {active && (
-          <button 
-            type="button" 
-            onClick={() => setActive(false)}
-            style={{
-              backgroundColor: '#ef4444',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '0.5rem 1.2rem',
-              cursor: 'pointer',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.35)',
-              fontSize: '0.95rem'
-            }}
-            title="กดเพื่อปิดการแสดงข้อมูลนักวิ่งคนนี้ และกลับสู่หน้ารอการสแกน"
-          >
-            <X size={18} /> ปิดแสดงรายชื่อ
-          </button>
+        {showControls && (
+          <div className="top-controls" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            backgroundColor: 'rgba(15, 23, 42, 0.85)',
+            padding: '1rem',
+            borderRadius: '16px',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          }}>
+            <form onSubmit={handleManualSubmit} style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                placeholder="Manual BIB"
+                value={manualBib}
+                onChange={e => setManualBib(e.target.value)}
+                style={{
+                  backgroundColor: '#ffffff',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  color: '#000000',
+                  border: '1px solid #cbd5e1',
+                  outline: 'none',
+                  width: '120px'
+                }}
+              />
+              <button type="submit" style={{
+                backgroundColor: 'var(--accent-blue)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.5rem 1rem',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}>Enter</button>
+            </form>
+
+            <div style={{ width: '1px', height: '30px', backgroundColor: 'rgba(255,255,255,0.2)' }}></div>
+
+            <label style={{ color: 'var(--text-muted)', fontWeight: 600 }}>เลือกจอ:</label>
+            <select
+              value={monitorId}
+              onChange={(e) => navigate(`/monitor/${e.target.value}`)}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                color: '#fff',
+                fontWeight: 'bold',
+                border: '1px solid rgba(255,255,255,0.2)',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="1" style={{ color: '#000000ff' }}>Monitor 1</option>
+              <option value="2" style={{ color: '#000000ff' }}>Monitor 2</option>
+              <option value="3" style={{ color: '#000000ff' }}>Monitor 3</option>
+              <option value="4" style={{ color: '#000000ff' }}>Monitor 4</option>
+              <option value="5" style={{ color: '#000000ff' }}>Monitor 5</option>
+            </select>
+
+            {active && (
+              <button
+                type="button"
+                onClick={() => setActive(false)}
+                style={{
+                  backgroundColor: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.5rem 1.2rem',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.35)',
+                  fontSize: '0.95rem'
+                }}
+                title="กดเพื่อปิดการแสดงข้อมูลนักวิ่งคนนี้ และกลับสู่หน้ารอการสแกน"
+              >
+                <X size={18} /> ปิดแสดงรายชื่อ
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -293,32 +416,32 @@ function Monitor() {
       </div>
 
       {active && (
-        <div 
-          key={castEvent?.timestamp || 'initial'} 
-          className="monitor-container" 
-          id="activeState" 
-          style={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            width: '100%', 
-            height: '100%', 
-            pointerEvents: 'auto', 
-            display: 'flex', 
-            flexDirection: 'row', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            padding: '2.5rem 3.5rem', 
+        <div
+          key={castEvent?.timestamp || 'initial'}
+          className="monitor-container"
+          id="activeState"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'auto',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '2.5rem 3.5rem',
             boxSizing: 'border-box',
             userSelect: isDragging ? 'none' : 'auto'
           }}
         >
           {/* Left: Runner details (resizable) */}
-          <div style={{ 
+          <div style={{
             flex: `0 0 ${leftRatio}%`,
             width: `${leftRatio}%`,
-            display: 'flex', 
-            flexDirection: 'column', 
+            display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1rem',
@@ -333,22 +456,22 @@ function Monitor() {
                 CHECKED IN
               </div>
             ) : (
-              <div 
-                className="status-badge" 
-                style={{ 
-                  display: 'inline-flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
+              <div
+                className="status-badge"
+                style={{
+                  display: 'inline-flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '0.6rem 2.4rem', 
+                  padding: '0.6rem 2.4rem',
                   borderRadius: '24px',
                   whiteSpace: 'nowrap'
                 }}
               >
-                <div style={{ 
-                  fontSize: 'clamp(0.85rem, 1.2vw, 1.15rem)', 
-                  fontWeight: 700, 
-                  letterSpacing: '1.5px', 
+                <div style={{
+                  fontSize: 'clamp(0.85rem, 1.2vw, 1.15rem)',
+                  fontWeight: 700,
+                  letterSpacing: '1.5px',
                   textTransform: 'uppercase',
                   opacity: 0.9,
                   marginBottom: '2px',
@@ -360,10 +483,10 @@ function Monitor() {
                   <span style={{ opacity: 0.5 }}>•</span>
                   <span>{startInfo.date}</span>
                 </div>
-                <div style={{ 
-                  fontSize: 'clamp(2.5rem, 4.2vw, 4.5rem)', 
-                  fontWeight: 900, 
-                  letterSpacing: '2px', 
+                <div style={{
+                  fontSize: 'clamp(2.5rem, 4.2vw, 4.5rem)',
+                  fontWeight: 900,
+                  letterSpacing: '2px',
                   lineHeight: 1.05,
                   fontFamily: 'monospace'
                 }}>
@@ -375,11 +498,12 @@ function Monitor() {
 
           {/* Resizer Divider Bar */}
           <div
+            className="resizer-bar"
             onMouseDown={startDragging}
             onTouchStart={startDragging}
             onDoubleClick={() => {
               setLeftRatio(38);
-              try { localStorage.setItem('rohn_monitor_split_ratio', '38'); } catch {}
+              try { localStorage.setItem('rohn_monitor_split_ratio', '38'); } catch { }
             }}
             title="ลากซ้าย-ขวา เพื่อปรับขนาดสัดส่วน (ดับเบิ้ลคลิกเพื่อรีเซ็ต 38%)"
             style={{
@@ -408,41 +532,41 @@ function Monitor() {
               <GripVertical size={14} color={isDragging ? '#ffffff' : 'rgba(0,0,0,0.5)'} />
             </div>
           </div>
-          
+
           {/* Right: Map & Logos */}
           {displayData.distance && (
-            <div style={{ 
+            <div style={{
               flex: `0 0 calc(${100 - leftRatio}% - 32px)`,
               width: `calc(${100 - leftRatio}% - 32px)`,
-              display: 'flex', 
+              display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              height: '90vh',
-              padding: '0.5rem',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100vh',
+              padding: '2rem 0.5rem 2rem 0.5rem',
               boxSizing: 'border-box',
               opacity: 0, // start invisible before animation
               animation: 'slideUpMap 1s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards'
             }}>
-              <img 
-                src={displayData.distance === '10KM' ? map10k : map5k} 
-                alt={`${displayData.distance} Map`} 
-                style={{ 
-                  maxHeight: '68vh', 
-                  maxWidth: '100%', 
-                  objectFit: 'contain', 
-                  borderRadius: '24px', 
-                  boxShadow: '0 20px 50px rgba(0,0,0,0.5)', 
-                  border: '2px solid rgba(255,255,255,0.05)' 
-                }} 
+              <img
+                src={displayData.distance === '10KM' ? map10k : map5k}
+                alt={`${displayData.distance} Map`}
+                style={{
+                  maxHeight: '75vh',
+                  maxWidth: '100%',
+                  objectFit: 'contain',
+                  borderRadius: '24px',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                  border: '2px solid rgba(255,255,255,0.05)'
+                }}
               />
 
               {/* Logos under map: logo-baanpong, logo-maekhaning, logo-rohn-full */}
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                gap: '4.5rem', 
+              <div className="monitor-logos" style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4.5rem',
                 marginTop: '1.2rem',
                 padding: '0.8rem 4rem',
                 backgroundColor: '#ffffff',
@@ -452,20 +576,20 @@ function Monitor() {
                 maxWidth: '100%',
                 flexWrap: 'nowrap'
               }}>
-                <img 
-                  src={logoBaanPong} 
-                  alt="Logo Baan Pong" 
-                  style={{ height: '60px', width: 'auto', objectFit: 'contain', borderRadius: '8px' }} 
+                <img
+                  src={logoBaanPong}
+                  alt="Logo Baan Pong"
+                  style={{ height: '60px', width: 'auto', objectFit: 'contain', borderRadius: '8px' }}
                 />
-                <img 
-                  src={logoMaekhaning} 
-                  alt="Logo Mae Khaning" 
-                  style={{ height: '60px', width: 'auto', objectFit: 'contain', borderRadius: '8px' }} 
+                <img
+                  src={logoMaekhaning}
+                  alt="Logo Mae Khaning"
+                  style={{ height: '60px', width: 'auto', objectFit: 'contain', borderRadius: '8px' }}
                 />
-                <img 
-                  src={logoFull} 
-                  alt="Logo ROHN Full" 
-                  style={{ height: '78px', width: 'auto', objectFit: 'contain' }} 
+                <img
+                  src={logoFull}
+                  alt="Logo ROHN Full"
+                  style={{ height: '78px', width: 'auto', objectFit: 'contain' }}
                 />
               </div>
             </div>
