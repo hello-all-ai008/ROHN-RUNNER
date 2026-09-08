@@ -52,7 +52,7 @@ function Scanner() {
   };
 
   return (
-    <div className="container" style={{ maxWidth: '800px', paddingTop: '2rem' }}>
+    <div className="container" style={{ maxWidth: '800px', padding: '1rem', paddingTop: '1rem' }}>
       <Link to="/" className="btn-back"><ArrowLeft size={18} /> กลับหน้าหลัก (Home)</Link>
       
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -61,7 +61,7 @@ function Scanner() {
           <h2 style={{ textAlign: 'center', margin: 0, fontSize: '1.2rem', color: 'var(--text-muted)' }}>Check-in Scanner</h2>
         </div>
         
-        <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <ScannerInput 
             onScan={handleCheckIn} 
             monitorId={monitorId} 

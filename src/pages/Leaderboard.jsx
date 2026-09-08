@@ -39,24 +39,24 @@ function Leaderboard() {
   }, [groups, selectedDistance]);
 
   return (
-    <div style={{ backgroundColor: 'var(--bg-dark)', minHeight: '100vh', paddingBottom: '3rem' }}>
+    <div className="lb-page-container">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2rem', borderBottom: '1px solid rgba(0,0,0,0.06)', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="lb-header-section">
         <div>
           <Link to="/" className="btn-back"><ArrowLeft size={18} /> กลับหน้าหลัก (Home)</Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginTop: '1rem' }}>
-            <img src={logoFull} alt="ROHN Logo" style={{ height: '60px' }} />
-            <div style={{ width: '2px', height: '60px', backgroundColor: 'var(--text-muted)', opacity: 0.3 }}></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2.5vw, 1.5rem)', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+            <img src={logoFull} alt="ROHN Logo" style={{ height: 'clamp(44px, 8vw, 60px)' }} />
+            <div style={{ width: '2px', height: 'clamp(44px, 8vw, 60px)', backgroundColor: 'var(--text-muted)', opacity: 0.3 }}></div>
             <div>
-              <h1 style={{ margin: 0, fontSize: '2.4rem', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-main)', lineHeight: 1 }}>Live Leaderboard</h1>
-              <p style={{ color: 'var(--text-muted)', margin: 0, marginTop: '6px', fontSize: '0.95rem' }}>Official Results & Overall Champions</p>
+              <h1 style={{ margin: 0, fontSize: 'clamp(1.6rem, 5vw, 2.4rem)', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-main)', lineHeight: 1.1 }}>Live Leaderboard</h1>
+              <p style={{ color: 'var(--text-muted)', margin: 0, marginTop: '4px', fontSize: 'clamp(0.8rem, 2.5vw, 0.95rem)' }}>Official Results & Overall Champions</p>
             </div>
           </div>
         </div>
 
         {/* Distance Filter */}
         {distances.length > 0 && (
-          <div style={{ display: 'flex', background: '#ffffff', borderRadius: '30px', border: '1px solid var(--border-color)', padding: '4px', gap: '4px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', background: '#ffffff', borderRadius: '30px', border: '1px solid var(--border-color)', padding: '4px', gap: '4px', flexWrap: 'wrap', maxWidth: '100%' }}>
             <button
               onClick={() => setSelectedDistance('ALL')}
               style={{
@@ -64,8 +64,8 @@ function Leaderboard() {
                 color: selectedDistance === 'ALL' ? '#ffffff' : 'var(--text-main)',
                 border: 'none',
                 borderRadius: '24px',
-                padding: '8px 18px',
-                fontSize: '13px',
+                padding: '6px 14px',
+                fontSize: '12px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 transition: 'all 0.2s'
@@ -82,8 +82,8 @@ function Leaderboard() {
                   color: selectedDistance === d ? '#ffffff' : 'var(--text-main)',
                   border: 'none',
                   borderRadius: '24px',
-                  padding: '8px 18px',
-                  fontSize: '13px',
+                  padding: '6px 14px',
+                  fontSize: '12px',
                   fontWeight: 700,
                   cursor: 'pointer',
                   transition: 'all 0.2s'
@@ -97,34 +97,28 @@ function Leaderboard() {
       </div>
 
       {loading && groups.length === 0 && (
-        <p style={{ color: 'var(--text-muted)', padding: '0 2rem' }}>Loading results...</p>
+        <p className="lb-section-pad" style={{ color: 'var(--text-muted)' }}>Loading results...</p>
       )}
 
       {/* 🏆 ผู้นำ Overall (อันดับ 1 ชาย / หญิง แต่ละระยะ) */}
-      <div style={{ padding: '0 2rem', marginBottom: '2.5rem' }}>
-        <div style={{
-          background: '#ffffff',
-          borderRadius: '20px',
-          padding: '1.75rem',
-          border: '1px solid rgba(245, 182, 10, 0.4)',
-          boxShadow: '0 8px 30px rgba(245, 182, 10, 0.08)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+      <div className="lb-section-pad" style={{ marginBottom: '2.5rem' }}>
+        <div className="overall-card">
+          <div className="overall-header-row">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ background: '#fef3c7', padding: '8px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ background: '#fef3c7', padding: '8px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Trophy size={24} color="#d97706" />
               </div>
-              <div>
-                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#92400e', letterSpacing: '0.5px' }}>
+              <div style={{ minWidth: 0 }}>
+                <h2 style={{ margin: 0, fontSize: 'clamp(1.1rem, 3.5vw, 1.4rem)', fontWeight: 800, color: '#92400e', letterSpacing: '0.5px' }}>
                   ทำเนียบผู้นำ Overall (อันดับ 1 ชาย / หญิง)
                 </h2>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: '#b45309', fontWeight: 500, marginTop: '2px' }}>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: '#b45309', fontWeight: 500, marginTop: '2px' }}>
                   ไม่จำกัดรุ่นอายุ · สนเฉพาะระยะทางและเพศ
                 </p>
               </div>
             </div>
 
-            <div style={{ fontSize: '12px', background: '#fffbeb', color: '#b45309', padding: '6px 14px', borderRadius: '99px', border: '1px solid #fde68a', fontWeight: 600 }}>
+            <div className="overall-badge">
               ⭐ ผู้ได้รางวัล Overall จะไม่นำไปจัดอันดับในรุ่นอายุ (1 คนรับได้ 1 รางวัล)
             </div>
           </div>
@@ -134,77 +128,77 @@ function Leaderboard() {
               ยังไม่มีข้อมูลผู้เข้าเส้นชัยในขณะนี้
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+            <div className="overall-grid">
               {filteredOverall.map((item) => (
-                <div key={item.distance} style={{ background: '#fafaf9', borderRadius: '16px', border: '1px solid #e7e5e4', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div key={item.distance} className="overall-item-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ background: '#0f172a', color: '#ffffff', padding: '4px 14px', borderRadius: '99px', fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.5px' }}>
+                    <span style={{ background: '#0f172a', color: '#ffffff', padding: '3px 12px', borderRadius: '99px', fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.5px' }}>
                       {item.distance}
                     </span>
-                    <span style={{ fontSize: '0.8rem', color: '#78716c', fontWeight: 600 }}>
+                    <span style={{ fontSize: '0.78rem', color: '#78716c', fontWeight: 600 }}>
                       Overall Champion
                     </span>
                   </div>
 
                   {/* Male Champion */}
-                  <div style={{ background: '#ffffff', borderRadius: '12px', padding: '12px 14px', border: '1px solid #e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '13px' }}>
+                  <div className="overall-champ-row male">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                      <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '12px', flexShrink: 0 }}>
                         ชาย
                       </div>
-                      <div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
                         {item.male ? (
                           <>
-                            <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>
+                            <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               🥇 {item.male.name}
                             </div>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                               <span style={{ fontWeight: 700, color: '#0284c7' }}>BIB: {item.male.bib}</span>
                               {item.male.age_group && <span>· รุ่น {item.male.age_group}</span>}
                             </div>
                           </>
                         ) : (
-                          <div style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.9rem' }}>— ยังไม่มีผู้เข้าเส้นชัย —</div>
+                          <div style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.88rem' }}>— ยังไม่มีผู้เข้าเส้นชัย —</div>
                         )}
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 800, color: item.male ? '#16a34a' : '#94a3b8' }}>
+                    <div style={{ textAlign: 'right', flexShrink: 0, paddingLeft: '8px' }}>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 800, color: item.male ? '#16a34a' : '#94a3b8', whiteSpace: 'nowrap' }}>
                         {item.male ? getRunnerDisplayTime(item.male) : '--:--:--'}
                       </div>
-                      {item.male && <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 500 }}>Net Time</div>}
+                      {item.male && <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>Net Time</div>}
                     </div>
                   </div>
 
                   {/* Female Champion */}
-                  <div style={{ background: '#ffffff', borderRadius: '12px', padding: '12px 14px', border: '1px solid #fce7f3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#fce7f3', color: '#db2777', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '13px' }}>
+                  <div className="overall-champ-row female">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                      <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: '#fce7f3', color: '#db2777', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '12px', flexShrink: 0 }}>
                         หญิง
                       </div>
-                      <div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
                         {item.female ? (
                           <>
-                            <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>
+                            <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               🥇 {item.female.name}
                             </div>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                               <span style={{ fontWeight: 700, color: '#db2777' }}>BIB: {item.female.bib}</span>
                               {item.female.age_group && <span>· รุ่น {item.female.age_group}</span>}
                             </div>
                           </>
                         ) : (
-                          <div style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.9rem' }}>— ยังไม่มีผู้เข้าเส้นชัย —</div>
+                          <div style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.88rem' }}>— ยังไม่มีผู้เข้าเส้นชัย —</div>
                         )}
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 800, color: item.female ? '#16a34a' : '#94a3b8' }}>
+                    <div style={{ textAlign: 'right', flexShrink: 0, paddingLeft: '8px' }}>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 800, color: item.female ? '#16a34a' : '#94a3b8', whiteSpace: 'nowrap' }}>
                         {item.female ? getRunnerDisplayTime(item.female) : '--:--:--'}
                       </div>
-                      {item.female && <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 500 }}>Net Time</div>}
+                      {item.female && <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>Net Time</div>}
                     </div>
                   </div>
                 </div>
@@ -215,20 +209,20 @@ function Leaderboard() {
       </div>
 
       {/* 🏃 จัดอันดับตามรุ่นอายุ (Top 5) */}
-      <div style={{ padding: '0 2rem', marginBottom: '1rem' }}>
+      <div className="lb-section-pad" style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ margin: 0, fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Medal size={22} color="var(--accent-blue)" /> ตารางจัดอันดับตามรุ่นอายุ (Top 5)
             </h2>
-            <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               * ผู้ที่ได้รับรางวัล Overall อันดับ 1 ชาย/หญิง ได้รับการตัดสิทธิ์ออกจากรุ่นอายุแล้ว เพื่อส่งต่อรางวัลให้ลำดับถัดไป (1 คนรับได้ 1 รางวัล)
             </p>
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1.75rem', padding: '0 2rem' }}>
+      <div className="groups-grid">
         {filteredGroups.map((group, gIdx) => (
           <div key={`${group.distance}_${group.age_group}_${group.gender}_${gIdx}`} style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 15px rgba(0,0,0,0.04)' }}>
             <div style={{ fontSize: '1.3rem', color: 'var(--text-main)', marginBottom: '1rem', borderLeft: '4px solid var(--accent-blue)', paddingLeft: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>

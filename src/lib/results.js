@@ -91,7 +91,7 @@ export function getRunnerStartTime(runner, refTimestamp) {
     }
   }
 
-  // 2. Check in runner.cps for a start checkpoint or earliest CP
+  // 2. Check in runner.cps for a start checkpoint
   if (runner.cps && typeof runner.cps === 'object') {
     for (const [key, val] of Object.entries(runner.cps)) {
       if (/start|ปล่อยตัว/i.test(String(key))) {
@@ -101,22 +101,8 @@ export function getRunnerStartTime(runner, refTimestamp) {
     }
   }
 
-  // 3. Check-in time
-  const checkinVal = runner.checked_in_at || runner.checkin;
-  if (checkinVal != null && checkinVal !== '') {
-    const ep = parseTimeToEpoch(checkinVal, refTimestamp);
-    if (ep != null) return ep;
-  }
-
-  // 4. Earliest checkpoint in cps (if before refTimestamp)
-  if (runner.cps && typeof runner.cps === 'object') {
-    const cpTimes = Object.values(runner.cps)
-      .map(v => parseTimeToEpoch(v, refTimestamp))
-      .filter(t => t != null && (!refTimestamp || t < refTimestamp));
-    if (cpTimes.length > 0) {
-      return Math.min(...cpTimes);
-    }
-  }
+  // NOTE: Check-in time (checked_in_at / checkin) is pre-race registration, NOT race start!
+  // Race start time is strictly the official Gun Start / Category Start or chip START station.
 
   return null;
 }
@@ -302,23 +288,29 @@ export function formatTime(epochMs) {
 }
 
 export function getRunnerDisplayTime(r) {
-  const { netTimeMs, finishEpoch, isNet } = getRunnerNetTime(r);
+  const { netTimeMs, isNet } = getRunnerNetTime(r);
   if (isNet && netTimeMs != null) {
     return formatDuration(netTimeMs);
-  }
-  if (finishEpoch != null) {
-    return formatTime(finishEpoch);
   }
   return '--:--:--';
 }
 
-// Checkpoint scan times are keyed by station UUID, which anon can't resolve
-// to a name — render them generically as "Checkpoint 1", "Checkpoint 2", …
+export const KNOWN_STATION_MAP = {
+  '37a6e24a-32ae-47fb-806f-6255bfc07a44': 'Start',
+  '3b63e9b7-4dbf-432e-8281-e8d7e4d22d8b': 'A1',
+  'c0207dcc-10d2-420c-aeaa-707b1924e569': 'A2',
+  '4f7f4393-8103-4b28-a28a-e015c712d4f5': 'Finish',
+  'a1': 'A1',
+  'a2': 'A2',
+  'a3': 'A3',
+  'a4': 'A4'
+};
+
+// Checkpoint scan times are keyed by station UUID — render their actual
+// Station Name if available from stations/KNOWN_STATION_MAP, or fallback to "Checkpoint 1", "Checkpoint 2", …
 // sorted by time, with synthetic "Check in"/"Start" nodes prepended and a
-// "Finish" node appended. "Start" is the official gun-start time, shared by
-// every runner in the category (mass start, from the Events "ผูกจุดตรวจและเวลา"
-// config) — distinct from "Check in", which is this runner's own scan time.
-export function checkpointTimeline(cps, finish, checkedInAt, gunStartTime) {
+// "Finish" node appended.
+export function checkpointTimeline(cps, finish, checkedInAt, gunStartTime, stations = []) {
   const timeline = [];
   if (checkedInAt) {
     timeline.push({ label: 'Check in', time: formatTime(new Date(checkedInAt).getTime()) });
@@ -326,10 +318,42 @@ export function checkpointTimeline(cps, finish, checkedInAt, gunStartTime) {
   if (gunStartTime) {
     timeline.push({ label: 'Start', time: formatTime(new Date(gunStartTime).getTime()) });
   }
-  const times = Object.values(cps || {}).sort((a, b) => a - b);
-  times.forEach((t, i) => timeline.push({ label: `Checkpoint ${i + 1}`, time: formatTime(t) }));
+
+  const stationMap = new Map();
+  // 1. Seed with known station map
+  Object.entries(KNOWN_STATION_MAP).forEach(([id, name]) => {
+    stationMap.set(String(id).toLowerCase(), name);
+  });
+  // 2. Overlay dynamic stations from database
+  (stations || []).forEach(s => {
+    if (s.id && s.name) {
+      stationMap.set(String(s.id).toLowerCase(), s.name);
+    }
+  });
+
+  const entries = Object.entries(cps || {})
+    .filter(([k]) => !['checkin', 'finish'].includes(String(k).toLowerCase()) && !/start|ปล่อยตัว|finish|เส้นชัย/i.test(String(k)))
+    .map(([stationId, val]) => {
+      const timeMs = typeof val === 'number' ? val : new Date(val).getTime();
+      const sId = String(stationId).toLowerCase();
+      const stationName = stationMap.get(sId) || (sId.length < 10 ? stationId : null);
+      return {
+        stationId,
+        stationName,
+        timeMs
+      };
+    })
+    .filter(item => !isNaN(item.timeMs))
+    .sort((a, b) => a.timeMs - b.timeMs);
+
+  entries.forEach((item, idx) => {
+    const label = item.stationName || `Checkpoint ${idx + 1}`;
+    timeline.push({ label, time: formatTime(item.timeMs) });
+  });
+
   if (finish) {
     timeline.push({ label: 'Finish', time: formatTime(finish) });
   }
   return timeline;
 }
+

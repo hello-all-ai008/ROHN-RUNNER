@@ -1,22 +1,30 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import ESlip from './ESlip';
 import { X, Printer } from 'lucide-react';
 
-export default function ESlipModal({ runner, overallRank, catRank, stations = [], onClose }) {
-  if (!runner) return null;
-
-  // Handle escape key
+export default function ESlipModal({ runner, overallRank, catRank, stations = [], runners = [], onClose }) {
+  // Handle escape key and attach print class to body
   useEffect(() => {
+    if (!runner) return;
+    document.body.classList.add('has-eslip-modal');
+
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
 
-  return (
+    return () => {
+      document.body.classList.remove('has-eslip-modal');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [runner, onClose]);
+
+  if (!runner) return null;
+
+  const modalContent = (
     <div 
-      className="modal-bg open" 
+      className="modal-bg open eslip-modal-portal" 
       style={{ 
         position: 'fixed',
         top: 0,
@@ -25,7 +33,7 @@ export default function ESlipModal({ runner, overallRank, catRank, stations = []
         height: '100vh',
         backgroundColor: 'rgba(0, 0, 0, 0.75)',
         backdropFilter: 'blur(5px)',
-        zIndex: 9999, 
+        zIndex: 99999, 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center', 
@@ -46,7 +54,7 @@ export default function ESlipModal({ runner, overallRank, catRank, stations = []
       }}>
         
         {/* Render the ESlip component */}
-        <ESlip runner={runner} overallRank={overallRank} catRank={catRank} stations={stations} />
+        <ESlip runner={runner} overallRank={overallRank} catRank={catRank} stations={stations} runners={runners} />
         
         {/* Actions - hidden when printing */}
         <div style={{ display: 'flex', gap: '10px', width: '100%' }} className="no-print">
@@ -82,7 +90,7 @@ export default function ESlipModal({ runner, overallRank, catRank, stations = []
               color: '#ffffff', 
               fontSize: '14px', 
               fontWeight: 600, 
-              border: 'none',
+              border: 'none', 
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -99,4 +107,7 @@ export default function ESlipModal({ runner, overallRank, catRank, stations = []
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
+

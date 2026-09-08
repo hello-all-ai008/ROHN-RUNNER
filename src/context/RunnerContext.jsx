@@ -30,11 +30,71 @@ async function fetchAllPublicResults() {
   return rows;
 }
 
+export const DEFAULT_STATIONS = [
+  { id: '37a6e24a-32ae-47fb-806f-6255bfc07a44', name: 'Start', type: 'START', sequence_order: 1 },
+  { id: '3b63e9b7-4dbf-432e-8281-e8d7e4d22d8b', name: 'A1', type: 'CP', sequence_order: 2 },
+  { id: 'c0207dcc-10d2-420c-aeaa-707b1924e569', name: 'A2', type: 'CP', sequence_order: 3 },
+  { id: '4f7f4393-8103-4b28-a28a-e015c712d4f5', name: 'Finish', type: 'FINISH', sequence_order: 4 },
+];
+
 export const RunnerProvider = ({ children }) => {
   const [runners, setRunners] = useState([]);
+  const [stations, setStations] = useState(DEFAULT_STATIONS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [castEvent, setCastEvent] = useState(null);
+
+  const loadStations = useCallback(async () => {
+    // 1. Try edge function invoke via Supabase client (handles CORS + authorization headers automatically)
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        `login-options?event_id=${encodeURIComponent(CURRENT_EVENT_ID)}`,
+        { method: 'GET' }
+      );
+      if (!error && Array.isArray(data?.slots)) {
+        const list = data.slots
+          .filter(s => s.station_id)
+          .map(s => ({
+            id: s.station_id,
+            name: s.station_name,
+            type: s.station_type,
+            sequence_order: s.sequence_order
+          }));
+        if (list.length > 0) {
+          setStations(list);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // 2. Direct fetch fallback
+    try {
+      const res = await fetch(`https://kjtbfzsgnsvkfjgayuys.supabase.co/functions/v1/login-options?event_id=${CURRENT_EVENT_ID}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && Array.isArray(json.slots)) {
+          const list = json.slots
+            .filter(s => s.station_id)
+            .map(s => ({
+              id: s.station_id,
+              name: s.station_name,
+              type: s.station_type,
+              sequence_order: s.sequence_order
+            }));
+          if (list.length > 0) {
+            setStations(list);
+            return;
+          }
+        }
+      }
+    } catch (e) {}
+
+    // 3. Direct DB select fallback if permitted
+    try {
+      const { data } = await supabase.from('stations').select('id, name, type, sequence_order').eq('event_id', CURRENT_EVENT_ID);
+      if (data && data.length > 0) setStations(data);
+    } catch (e) {}
+  }, []);
 
   const loadRunners = useCallback(async () => {
     try {
@@ -47,6 +107,10 @@ export const RunnerProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    loadStations();
+  }, [loadStations]);
 
   useEffect(() => {
     loadRunners();
@@ -169,7 +233,7 @@ export const RunnerProvider = ({ children }) => {
   };
 
   return (
-    <RunnerContext.Provider value={{ runners, loading, error, getRunnerByBib, checkInRunner, castToMonitor, castEvent, refetchRunners: loadRunners }}>
+    <RunnerContext.Provider value={{ runners, stations, loading, error, getRunnerByBib, checkInRunner, castToMonitor, castEvent, refetchRunners: loadRunners }}>
       {children}
     </RunnerContext.Provider>
   );
