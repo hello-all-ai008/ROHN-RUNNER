@@ -304,10 +304,15 @@ export function formatTime(epochMs) {
 }
 
 // Race-progress status, independent of registration_status (check-in desk
-// state). DNF requires a per-category FINISH cutoff (finish_cutoff_time,
-// exposed to anon via the public_results view) — until that's configured
-// per category (Events > ผูกจุดตรวจและเวลา), no runner ever resolves to DNF.
+// state). `runner.race_status` is an authoritative admin-set flag (staff app)
+// and takes precedence over everything below. When it's not set, DNF falls
+// back to a per-category FINISH cutoff (finish_cutoff_time, exposed to anon
+// via the public_results view) — until that's configured per category
+// (Events > ผูกจุดตรวจและเวลา), no runner ever resolves to DNF via the fallback.
 export function getRunnerRaceStatus(runner) {
+  if (runner.race_status === 'DNF') return 'DNF';
+  if (runner.race_status === 'DNS') return 'DNS';
+
   if (runner.finish) return 'FINISHED';
 
   const started = Boolean(runner.checked_in_at)
@@ -365,7 +370,7 @@ export function checkpointTimeline(cps, finish, checkedInAt, gunStartTime, stati
   });
 
   const entries = Object.entries(cps || {})
-    .filter(([k]) => !['checkin', 'finish'].includes(String(k).toLowerCase()) && !/start|ปล่อยตัว|finish|เส้นชัย/i.test(String(k)))
+    .filter(([k]) => !['checkin', 'finish', 'dnf', 'dnf_time', 'dnf_station'].includes(String(k).toLowerCase()) && !/start|ปล่อยตัว|finish|เส้นชัย/i.test(String(k)))
     .map(([stationId, val]) => {
       const timeMs = typeof val === 'number' ? val : new Date(val).getTime();
       const sId = String(stationId).toLowerCase();
