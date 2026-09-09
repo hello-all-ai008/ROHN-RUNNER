@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
 import { supabase } from '../lib/supabaseClient';
@@ -46,11 +46,27 @@ function formatStartDateTime(startVal, fallbackRunners = []) {
   return { time: '--:--:--', date: eventDateStr, hasTime: false };
 }
 
+// Single source of truth for resolving a "check in" timestamp. Never lets a
+// gunStartTime fallback be mistaken for a real checkin — callers must use
+// `isRealCheckin` to decide how to label the value.
+function resolveCheckinTime(evt, runner, gunStartTime) {
+  if (evt?.checkinTime) return { checkinTime: evt.checkinTime, isRealCheckin: true };
+  if (runner?.checkin) return { checkinTime: runner.checkin, isRealCheckin: true };
+  if (runner?.checked_in_at) return { checkinTime: runner.checked_in_at, isRealCheckin: true };
+  if (gunStartTime) return { checkinTime: gunStartTime, isRealCheckin: false };
+  return { checkinTime: null, isRealCheckin: false };
+}
+
 function Monitor() {
   const { id } = useParams();
   const monitorId = id || '1';
   const navigate = useNavigate();
   const { castEvent, getRunnerByBib, castToMonitor, runners } = useRunner();
+
+  // Keep a ref to the latest getRunnerByBib so callbacks that must stay
+  // referentially stable (applyEvent) never close over a stale version.
+  const getRunnerByBibRef = useRef(getRunnerByBib);
+  useEffect(() => { getRunnerByBibRef.current = getRunnerByBib; });
 
   const [active, setActive] = useState(false);
   const [displayData, setDisplayData] = useState({
@@ -60,7 +76,8 @@ function Monitor() {
     ageGroup: '',
     source: 'rohn_runner_scanner',
     gunStartTime: null,
-    checkinTime: null
+    checkinTime: null,
+    isRealCheckin: false
   });
   const [manualBib, setManualBib] = useState('');
   const [showControls, setShowControls] = useState(false);
@@ -118,59 +135,51 @@ function Monitor() {
     };
   }, [leftRatio]);
 
+  const applyEvent = useCallback((evt) => {
+    if (!evt) return;
+    const targetId = String(evt.monitorId);
+    if (targetId === String(monitorId) || targetId === 'all') {
+      const bib = evt.bib || '----';
+      const runner = getRunnerByBibRef.current(bib);
+      const gunStartTime = evt.gunStartTime || runner?.gun_start_time || null;
+      const { checkinTime, isRealCheckin } = resolveCheckinTime(evt, runner, gunStartTime);
+      const isScanner = evt.source === 'rohn_runner_scanner';
+
+      setDisplayData({
+        bib: bib,
+        name: evt.name || runner?.name || 'Runner Name',
+        distance: evt.distance || runner?.distance || '',
+        ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
+        source: isScanner ? 'rohn_runner_scanner' : 'rohn_admin_checkin',
+        gunStartTime: gunStartTime,
+        checkinTime: checkinTime,
+        isRealCheckin: isRealCheckin
+      });
+      setActive(true);
+    }
+  }, [monitorId]);
+
+  // Restore last cast event from localStorage on mount only.
   useEffect(() => {
     const saved = localStorage.getItem('react_cast_event') || localStorage.getItem('rohn_monitor_cast');
     if (saved) {
       try {
         const evt = JSON.parse(saved);
-        if (evt && (String(evt.monitorId) === String(monitorId) || evt.monitorId === 'all')) {
-          const runner = getRunnerByBib(evt.bib);
-          const gunStartTime = evt.gunStartTime || runner?.gun_start_time || null;
-          const checkinTime = evt.checkinTime || evt.timestamp || runner?.checkin || runner?.checked_in_at || gunStartTime;
-          const isScanner = evt.source === 'rohn_runner_scanner';
-          setDisplayData({
-            bib: evt.bib || '----',
-            name: evt.name || runner?.name || 'Runner Name',
-            distance: evt.distance || runner?.distance || '',
-            ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
-            source: isScanner ? 'rohn_runner_scanner' : 'rohn_admin_checkin',
-            gunStartTime: gunStartTime,
-            checkinTime: checkinTime
-          });
-          setActive(true);
-        }
+        if (evt) applyEvent(evt);
       } catch (e) { }
     }
-  }, [monitorId, getRunnerByBib]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only restore, applyEvent already reflects the correct monitorId at mount
+  }, []);
 
+  // React to live castEvent updates from context.
   useEffect(() => {
-    const applyEvent = (evt) => {
-      if (!evt) return;
-      const targetId = String(evt.monitorId);
-      if (targetId === String(monitorId) || targetId === 'all') {
-        const bib = evt.bib || '----';
-        const runner = getRunnerByBib(bib);
-        const gunStartTime = evt.gunStartTime || runner?.gun_start_time || null;
-        const checkinTime = evt.checkinTime || (evt.source === 'rohn_admin_checkin' ? evt.timestamp : null) || runner?.checkin || runner?.checked_in_at || gunStartTime;
-        const isScanner = evt.source === 'rohn_runner_scanner';
+    if (castEvent) applyEvent(castEvent);
+  }, [castEvent, applyEvent]);
 
-        setDisplayData({
-          bib: bib,
-          name: evt.name || runner?.name || 'Runner Name',
-          distance: evt.distance || runner?.distance || '',
-          ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
-          source: isScanner ? 'rohn_runner_scanner' : 'rohn_admin_checkin',
-          gunStartTime: gunStartTime,
-          checkinTime: checkinTime
-        });
-        setActive(true);
-      }
-    };
-
-    if (castEvent) {
-      applyEvent(castEvent);
-    }
-
+  // Subscribe to realtime transports. Must NOT depend on castEvent, or the
+  // channel/BroadcastChannel/listener gets torn down and recreated on every
+  // single broadcast.
+  useEffect(() => {
     // 1. Supabase Realtime Channel for instant cross-device/cross-origin updates
     const supabaseChannel = supabase.channel('rohn_monitor_stream', {
       config: { broadcast: { ack: false } }
@@ -204,7 +213,7 @@ function Monitor() {
       if (bc) bc.close();
       window.removeEventListener('message', handleMessage);
     };
-  }, [castEvent, monitorId, getRunnerByBib]);
+  }, [monitorId, applyEvent]);
 
   const handleManualSubmit = (e) => {
     e.preventDefault();
@@ -226,12 +235,10 @@ function Monitor() {
     setManualBib('');
   };
 
-  const effectiveTime = displayData.checkinTime 
-    || displayData.gunStartTime 
-    || getRunnerByBib(displayData.bib)?.checkin
-    || getRunnerByBib(displayData.bib)?.checked_in_at
-    || getRunnerByBib(displayData.bib)?.gun_start_time 
-    || null;
+  const displayRunner = getRunnerByBib(displayData.bib);
+  const { checkinTime: effectiveTime, isRealCheckin } = displayData.checkinTime
+    ? { checkinTime: displayData.checkinTime, isRealCheckin: displayData.isRealCheckin }
+    : resolveCheckinTime(null, displayRunner, displayData.gunStartTime || displayRunner?.gun_start_time);
   const startInfo = formatStartDateTime(effectiveTime, runners);
 
   return (
@@ -500,7 +507,7 @@ function Monitor() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <span>Check in</span>
+                <span>{isRealCheckin ? 'Check in' : 'Start (scheduled)'}</span>
                 <span style={{ opacity: 0.5 }}>•</span>
                 <span>{startInfo.date}</span>
               </div>
