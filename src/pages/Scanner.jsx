@@ -75,29 +75,29 @@ function Scanner() {
           )}
 
           {message.type === 'success' && (
-            <div style={{ marginTop: '1.5rem', width: '100%', maxWidth: '600px', padding: '1.5rem', borderRadius: '12px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-              <div style={{ textAlign: 'center', color: 'var(--success-green)', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '1rem' }}>✅ สแกนสำเร็จ (ส่งขึ้นจอ {message.monitorId})</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ marginTop: '1rem', width: '100%', maxWidth: '600px', padding: '1rem', borderRadius: '12px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+              <div style={{ textAlign: 'center', color: 'var(--success-green)', fontWeight: 'bold', fontSize: '1rem', marginBottom: '0.5rem' }}>✅ สแกนสำเร็จ (ส่งขึ้นจอ {message.monitorId})</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>BIB</span>
-                  <strong style={{ fontSize: '1.5rem', color: '#111827' }}>{message.bib}</strong>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>BIB</span>
+                  <strong style={{ fontSize: '1.1rem', color: '#111827' }}>{message.bib}</strong>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Name</span>
-                  <strong style={{ fontSize: '1.5rem', color: '#111827' }}>{message.name}</strong>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Name</span>
+                  <strong style={{ fontSize: '1.1rem', color: '#111827' }}>{message.name}</strong>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Distance</span>
-                  <strong style={{ fontSize: '1.5rem', color: '#111827' }}>{message.distance}</strong>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Distance</span>
+                  <strong style={{ fontSize: '1.1rem', color: '#111827' }}>{message.distance}</strong>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Age Group</span>
-                  <strong style={{ fontSize: '1.5rem', color: '#111827' }}>{message.ageGroup}</strong>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Age Group</span>
+                  <strong style={{ fontSize: '1.1rem', color: '#111827' }}>{message.ageGroup}</strong>
                 </div>
                 {message.startTime && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gridColumn: '1 / -1', borderTop: '1px dashed #bbf7d0', paddingTop: '0.5rem' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Start Time</span>
-                    <strong style={{ fontSize: '1.3rem', color: 'var(--success-green)' }}>⏱️ {message.startTime}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gridColumn: '1 / -1', borderTop: '1px dashed #bbf7d0', paddingTop: '0.25rem' }}>
+                    <span style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Start Time</span>
+                    <strong style={{ fontSize: '1.1rem', color: 'var(--success-green)' }}>⏱️ {message.startTime}</strong>
                   </div>
                 )}
               </div>
