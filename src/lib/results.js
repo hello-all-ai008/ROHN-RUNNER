@@ -143,13 +143,17 @@ export function groupKey(runner) {
   return `${runner.distance}||${runner.age_group}||${runner.gender}`;
 }
 
+export function isFinisher(r) {
+  return Boolean(getFinishEpoch(r)) && r.race_status !== 'DNF' && r.race_status !== 'DNS';
+}
+
 // Compute 1st Male and 1st Female for each distance (regardless of age group)
 // Ranked by Net Time (finish - start). Overall ranking only applies to 10KM;
 // 5KM has no Overall Champion and its top finishers are ranked normally
 // within their age group instead.
 export function getOverallLeaders(allRunners) {
   const finished = (allRunners || [])
-    .filter((r) => getFinishEpoch(r))
+    .filter(isFinisher)
     .filter((r) => !/^5\s*KM/i.test(r.distance || ''));
 
   const distanceMap = new Map();
@@ -192,7 +196,7 @@ export function getOverallLeaders(allRunners) {
 // This runner's 1-based position within its group, sorted by net time (finish - start)
 // ascending. Supports excluding overall winners (1 คนรับได้แค่ 1 รางวัล)
 export function computeRank(runner, allRunners, excludeOverall = true) {
-  if (!runner || !runner.finish) return null;
+  if (!runner || !isFinisher(runner)) return null;
   const runnerFinish = getFinishEpoch(runner);
   if (!runnerFinish) return null;
 
@@ -208,7 +212,7 @@ export function computeRank(runner, allRunners, excludeOverall = true) {
   }
 
   const group = allRunners
-    .filter((r) => getFinishEpoch(r) && groupKey(r) === groupKey(runner) && (!r.bib || !excludeBibs.has(String(r.bib))))
+    .filter((r) => isFinisher(r) && groupKey(r) === groupKey(runner) && (!r.bib || !excludeBibs.has(String(r.bib))))
     .sort(compareRunnerNetTime);
   const index = group.findIndex((r) => String(r.bib) === String(runner.bib));
   return index === -1 ? null : index + 1;
@@ -225,7 +229,7 @@ export function rankMapByBib(allRunners, excludeOverall = true) {
 
   const groups = new Map();
   allRunners
-    .filter((r) => getFinishEpoch(r) && (!r.bib || !excludeBibs.has(String(r.bib))))
+    .filter((r) => isFinisher(r) && (!r.bib || !excludeBibs.has(String(r.bib))))
     .forEach((r) => {
       const key = groupKey(r);
       if (!groups.has(key)) groups.set(key, []);
@@ -263,7 +267,7 @@ function parseAgeGroupMin(label) {
 export function topNByGroup(allRunners, n = 5, excludeBibs = new Set()) {
   const groups = new Map();
   allRunners
-    .filter((r) => getFinishEpoch(r) && (!r.bib || !excludeBibs.has(String(r.bib))))
+    .filter((r) => isFinisher(r) && (!r.bib || !excludeBibs.has(String(r.bib))))
     .forEach((r) => {
       const key = groupKey(r);
       if (!groups.has(key)) {
@@ -326,9 +330,12 @@ export function getRunnerRaceStatus(runner) {
 }
 
 export function getRunnerDisplayTime(r) {
-  const { netTimeMs, isNet } = getRunnerNetTime(r);
+  const { netTimeMs, isNet, finishEpoch } = getRunnerNetTime(r);
   if (isNet && netTimeMs != null) {
     return formatDuration(netTimeMs);
+  }
+  if (finishEpoch) {
+    return formatTime(finishEpoch) || '--:--:--';
   }
   return '--:--:--';
 }

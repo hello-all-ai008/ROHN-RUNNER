@@ -256,8 +256,17 @@ export default function ESlip({ runner, overallRank, catRank, stations = [], run
   const fmtTime = (ts) => {
     if (!ts) return '—';
     try {
+      if (typeof ts === 'string' && /^\d{2}:\d{2}(:\d{2})?$/.test(ts.trim())) {
+        return ts.trim().length === 5 ? `${ts.trim()}:00` : ts.trim();
+      }
       const d = typeof ts === 'number' ? new Date(ts) : new Date(ts);
-      return isNaN(d.getTime()) ? '—' : d.toTimeString().slice(0, 8);
+      return isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('th-TH', {
+        timeZone: 'Asia/Bangkok',
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
     } catch {
       return '—';
     }

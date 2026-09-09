@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import logoFull from '../LOGO/logo-rohn-full.png';
 import { ArrowLeft, Trophy, Medal } from 'lucide-react';
 import { useRunner } from '../context/RunnerContext';
-import { topNByGroup, getOverallLeaders, getRunnerDisplayTime } from '../lib/results';
+import { topNByGroup, getOverallLeaders, getRunnerDisplayTime, getRunnerNetTime } from '../lib/results';
 import { formatEnglishLabel } from '../components/ESlip';
 
 function Leaderboard() {
@@ -277,7 +277,11 @@ function Leaderboard() {
                       <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 800, color: item.male ? '#16a34a' : '#94a3b8', whiteSpace: 'nowrap' }}>
                         {item.male ? getRunnerDisplayTime(item.male) : '--:--:--'}
                       </div>
-                      {item.male && <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>Net Time</div>}
+                      {item.male && (
+                        <div style={{ fontSize: '0.7rem', color: getRunnerNetTime(item.male).isNet ? '#64748b' : '#0284c7', fontWeight: 600 }}>
+                          {getRunnerNetTime(item.male).isNet ? 'Net Time' : 'Finish Time'}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -308,7 +312,11 @@ function Leaderboard() {
                       <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 800, color: item.female ? '#16a34a' : '#94a3b8', whiteSpace: 'nowrap' }}>
                         {item.female ? getRunnerDisplayTime(item.female) : '--:--:--'}
                       </div>
-                      {item.female && <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>Net Time</div>}
+                      {item.female && (
+                        <div style={{ fontSize: '0.7rem', color: getRunnerNetTime(item.female).isNet ? '#64748b' : '#0284c7', fontWeight: 600 }}>
+                          {getRunnerNetTime(item.female).isNet ? 'Net Time' : 'Finish Time'}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -359,7 +367,9 @@ function Leaderboard() {
                         <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', color: 'var(--success-green)', fontWeight: 'bold' }}>
                           {getRunnerDisplayTime(r)}
                         </div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Net Time</div>
+                        <div style={{ fontSize: '0.72rem', color: getRunnerNetTime(r).isNet ? 'var(--text-muted)' : '#0284c7', fontWeight: 600 }}>
+                          {getRunnerNetTime(r).isNet ? 'Net Time' : 'Finish Time'}
+                        </div>
                       </div>
                     </div>
                   </div>
