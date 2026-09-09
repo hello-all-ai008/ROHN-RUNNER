@@ -87,7 +87,11 @@ export function getRunnerStartTime(runner, refTimestamp) {
   for (const c of candidates) {
     if (c != null && c !== '') {
       const ep = parseTimeToEpoch(c, refTimestamp);
-      if (ep != null) return ep;
+      // gun_start_time can be a category's scheduled START cutoff rather
+      // than a real scan — reject it if it doesn't even precede finish
+      // (e.g. race-day cutoff vs. a pre-race test finish), so the chain
+      // falls through to a real fallback instead of returning bogus math.
+      if (ep != null && (!refTimestamp || ep < refTimestamp)) return ep;
     }
   }
 
@@ -96,7 +100,7 @@ export function getRunnerStartTime(runner, refTimestamp) {
     for (const [key, val] of Object.entries(runner.cps)) {
       if (/start|ปล่อยตัว/i.test(String(key))) {
         const ep = parseTimeToEpoch(val, refTimestamp);
-        if (ep != null) return ep;
+        if (ep != null && (!refTimestamp || ep < refTimestamp)) return ep;
       }
     }
   }
