@@ -80,35 +80,48 @@ function Leaderboard() {
             font-size: 0.6rem !important;
             min-width: 16px !important;
           }
-          .leaderboard-row > div:nth-child(2) {
-            gap: 4px !important;
+          .lb-row-body {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 2px !important;
             min-width: 0 !important;
           }
-          .leaderboard-row > div:nth-child(2) > div:first-child {
-            gap: 3px !important;
-            min-width: 0 !important;
-            flex: 1 !important;
+          .lb-row-nameline {
+            display: block !important;
+            width: 100% !important;
           }
-          .leaderboard-row > div:nth-child(2) > div:first-child > div:first-child {
-            font-size: 0.68rem !important;
-            line-height: 1.15 !important;
-            max-width: 65px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+          .lb-row-name {
+            font-size: 0.72rem !important;
+            line-height: 1.2 !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+            max-width: none !important;
           }
-          .leaderboard-row > div:nth-child(2) > div:first-child > div:last-child {
-            font-size: 0.52rem !important;
-            padding: 1px 3px !important;
-            white-space: nowrap;
+          .lb-row-bib {
+            display: none !important;
           }
-          .leaderboard-row > div:nth-child(2) > div:last-child {
+          .lb-row-time {
+            display: flex !important;
+            align-items: baseline !important;
+            gap: 6px !important;
+            width: 100% !important;
             flex-shrink: 0 !important;
+            text-align: left !important;
           }
-          .leaderboard-row > div:nth-child(2) > div:last-child > div:first-child {
+          .lb-row-bib-mobile {
+            display: inline-block !important;
+            font-size: 0.58rem !important;
+            font-weight: 600 !important;
+            color: var(--text-muted) !important;
+            background: rgba(0,0,0,0.04) !important;
+            padding: 1px 5px !important;
+            border-radius: 4px !important;
+          }
+          .lb-row-time-value {
             font-size: 0.68rem !important;
           }
-          .leaderboard-row > div:nth-child(2) > div:last-child > div:last-child {
+          .lb-row-time-label {
             font-size: 0.46rem !important;
           }
           .groups-grid > div > div:first-child {
@@ -358,16 +371,17 @@ function Leaderboard() {
                 return (
                   <div key={i} className="leaderboard-row">
                     <div className={`rank ${rankClass}`}>{i+1}</div>
-                    <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
-                        <div style={{ fontWeight: 'bold', fontSize: '1.05rem', color: 'var(--text-main)' }}>{r.name}</div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.04)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>BIB: {r.bib}</div>
+                    <div className="lb-row-body" style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                      <div className="lb-row-nameline" style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
+                        <div className="lb-row-name" style={{ fontWeight: 'bold', fontSize: '1.05rem', color: 'var(--text-main)' }}>{r.name}</div>
+                        <div className="lb-row-bib" style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.04)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>BIB: {r.bib}</div>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', color: 'var(--success-green)', fontWeight: 'bold' }}>
+                      <div className="lb-row-time" style={{ textAlign: 'right' }}>
+                        <span className="lb-row-bib-mobile" style={{ display: 'none' }}>BIB: {r.bib}</span>
+                        <div className="lb-row-time-value" style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', color: 'var(--success-green)', fontWeight: 'bold' }}>
                           {getRunnerDisplayTime(r)}
                         </div>
-                        <div style={{ fontSize: '0.72rem', color: getRunnerNetTime(r).isNet ? 'var(--text-muted)' : '#0284c7', fontWeight: 600 }}>
+                        <div className="lb-row-time-label" style={{ fontSize: '0.72rem', color: getRunnerNetTime(r).isNet ? 'var(--text-muted)' : '#0284c7', fontWeight: 600 }}>
                           {getRunnerNetTime(r).isNet ? 'Net Time' : 'Finish Time'}
                         </div>
                       </div>

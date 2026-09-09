@@ -104,6 +104,18 @@ export function getRunnerStartTime(runner, refTimestamp) {
   // NOTE: Check-in time (checked_in_at / checkin) is pre-race registration, NOT race start!
   // Race start time is strictly the official Gun Start / Category Start or chip START station.
 
+  // 3. Earliest checkpoint scan before finish (proxy start when no explicit
+  //    start time is known — e.g. runner started but the gun/CP1 start scan
+  //    was never recorded, only a later checkpoint was)
+  if (runner.cps && typeof runner.cps === 'object') {
+    const cpTimes = Object.values(runner.cps)
+      .map(v => parseTimeToEpoch(v, refTimestamp))
+      .filter(t => t != null && (!refTimestamp || t < refTimestamp));
+    if (cpTimes.length > 0) {
+      return Math.min(...cpTimes);
+    }
+  }
+
   return null;
 }
 
