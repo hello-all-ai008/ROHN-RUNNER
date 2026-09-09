@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
+import { supabase } from '../lib/supabaseClient';
 import logoFull from '../LOGO/logo-rohn-full.png';
 import logoBaanPong from '../LOGO/logo-BaanPong.jpg';
 import logoMaekhaning from '../LOGO/logo-maekhaning.jpg';
@@ -18,9 +19,10 @@ function formatStartDateTime(startVal, fallbackRunners = []) {
   // Fallback date from other runners in the same event if available
   let eventDateStr = '13 ก.ย. 2026';
   if (!dateObj && Array.isArray(fallbackRunners)) {
-    const refRunner = fallbackRunners.find(r => r.gun_start_time);
-    if (refRunner && refRunner.gun_start_time) {
-      const rd = new Date(refRunner.gun_start_time);
+    const refRunner = fallbackRunners.find(r => r.gun_start_time || r.checkin || r.checked_in_at);
+    if (refRunner) {
+      const refVal = refRunner.gun_start_time || refRunner.checkin || refRunner.checked_in_at;
+      const rd = new Date(refVal);
       if (!isNaN(rd.getTime())) {
         const thaiMonth = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][rd.getMonth()];
         eventDateStr = `${rd.getDate()} ${thaiMonth} ${rd.getFullYear()}`;
@@ -57,7 +59,8 @@ function Monitor() {
     distance: '',
     ageGroup: '',
     source: 'rohn_runner_scanner',
-    gunStartTime: null
+    gunStartTime: null,
+    checkinTime: null
   });
   const [manualBib, setManualBib] = useState('');
   const [showControls, setShowControls] = useState(false);
@@ -123,6 +126,7 @@ function Monitor() {
         if (evt && (String(evt.monitorId) === String(monitorId) || evt.monitorId === 'all')) {
           const runner = getRunnerByBib(evt.bib);
           const gunStartTime = evt.gunStartTime || runner?.gun_start_time || null;
+          const checkinTime = evt.checkinTime || evt.timestamp || runner?.checkin || runner?.checked_in_at || gunStartTime;
           const isScanner = evt.source === 'rohn_runner_scanner';
           setDisplayData({
             bib: evt.bib || '----',
@@ -130,7 +134,8 @@ function Monitor() {
             distance: evt.distance || runner?.distance || '',
             ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
             source: isScanner ? 'rohn_runner_scanner' : 'rohn_admin_checkin',
-            gunStartTime: gunStartTime
+            gunStartTime: gunStartTime,
+            checkinTime: checkinTime
           });
           setActive(true);
         }
@@ -146,6 +151,7 @@ function Monitor() {
         const bib = evt.bib || '----';
         const runner = getRunnerByBib(bib);
         const gunStartTime = evt.gunStartTime || runner?.gun_start_time || null;
+        const checkinTime = evt.checkinTime || (evt.source === 'rohn_admin_checkin' ? evt.timestamp : null) || runner?.checkin || runner?.checked_in_at || gunStartTime;
         const isScanner = evt.source === 'rohn_runner_scanner';
 
         setDisplayData({
@@ -154,7 +160,8 @@ function Monitor() {
           distance: evt.distance || runner?.distance || '',
           ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
           source: isScanner ? 'rohn_runner_scanner' : 'rohn_admin_checkin',
-          gunStartTime: gunStartTime
+          gunStartTime: gunStartTime,
+          checkinTime: checkinTime
         });
         setActive(true);
       }
@@ -164,6 +171,18 @@ function Monitor() {
       applyEvent(castEvent);
     }
 
+    // 1. Supabase Realtime Channel for instant cross-device/cross-origin updates
+    const supabaseChannel = supabase.channel('rohn_monitor_stream', {
+      config: { broadcast: { ack: false } }
+    });
+    supabaseChannel.on('broadcast', { event: 'monitor_cast' }, ({ payload }) => {
+      if (payload) {
+        applyEvent(payload);
+      }
+    });
+    supabaseChannel.subscribe();
+
+    // 2. BroadcastChannel for fast same-origin tab sync
     let bc;
     try {
       bc = new BroadcastChannel('rohn_monitor_channel');
@@ -172,6 +191,7 @@ function Monitor() {
       };
     } catch { }
 
+    // 3. Window postMessage for child/popout windows
     const handleMessage = (e) => {
       if (e.data && (e.data.type === 'ROHN_MONITOR_CAST' || e.data.monitorId)) {
         applyEvent(e.data);
@@ -180,6 +200,7 @@ function Monitor() {
     window.addEventListener('message', handleMessage);
 
     return () => {
+      supabase.removeChannel(supabaseChannel);
       if (bc) bc.close();
       window.removeEventListener('message', handleMessage);
     };
@@ -192,19 +213,26 @@ function Monitor() {
     if (runner) {
       castToMonitor(monitorId, runner.bib, runner.name, runner.distance, runner.ageGroup, {
         source: 'rohn_runner_scanner',
-        gunStartTime: runner.gun_start_time
+        gunStartTime: runner.gun_start_time,
+        checkinTime: runner.checkin || runner.checked_in_at || new Date().toISOString()
       });
     } else {
       castToMonitor(monitorId, manualBib.trim(), 'NOT FOUND', '-', '-', {
         source: 'rohn_runner_scanner',
-        gunStartTime: null
+        gunStartTime: null,
+        checkinTime: null
       });
     }
     setManualBib('');
   };
 
-  const effectiveGunStartTime = displayData.gunStartTime || getRunnerByBib(displayData.bib)?.gun_start_time || null;
-  const startInfo = formatStartDateTime(effectiveGunStartTime, runners);
+  const effectiveTime = displayData.checkinTime 
+    || displayData.gunStartTime 
+    || getRunnerByBib(displayData.bib)?.checkin
+    || getRunnerByBib(displayData.bib)?.checked_in_at
+    || getRunnerByBib(displayData.bib)?.gun_start_time 
+    || null;
+  const startInfo = formatStartDateTime(effectiveTime, runners);
 
   return (
     <div style={{ backgroundColor: 'var(--bg-dark)', height: '100vh', overflow: 'hidden' }} className={active ? 'show-active' : ''}>
@@ -251,7 +279,7 @@ function Monitor() {
             margin-top: 0.5rem !important;
           }
           .monitor-logos img {
-            height: 30px !important;
+            height: 45px !important;
           }
           .status-badge {
             padding: 0.5rem 1.5rem !important;
@@ -290,8 +318,6 @@ function Monitor() {
             left: 0.8rem !important;
             padding: 0.4rem 0.8rem !important;
             font-size: 0.85rem !important;
-            background: rgba(0,0,0,0.5) !important;
-            border-radius: 8px !important;
           }
         }
       `}</style>
@@ -451,49 +477,43 @@ function Monitor() {
             <div className="monitor-bib" style={{ fontSize: 'clamp(5.5rem, 9vw, 10rem)', margin: 0, lineHeight: 1 }}>{displayData.bib}</div>
             <div className="monitor-name" style={{ fontSize: 'clamp(2.5rem, 4vw, 4rem)', margin: '1rem 0', textAlign: 'center', wordBreak: 'break-word' }}>{displayData.name}</div>
             <div style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.5rem)', color: 'var(--text-muted)', marginBottom: '2rem', fontWeight: 500, textAlign: 'center' }}>{displayData.distance} • {displayData.ageGroup}</div>
-            {displayData.source === 'rohn_admin_checkin' ? (
-              <div className="status-badge" style={{ fontSize: 'clamp(1.5rem, 2.2vw, 2.5rem)', padding: '0.8rem 2.8rem', whiteSpace: 'nowrap' }}>
-                CHECKED IN
+            <div
+              className="status-badge"
+              style={{
+                display: 'inline-flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0.6rem 2.4rem',
+                borderRadius: '24px',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <div style={{
+                fontSize: 'clamp(0.85rem, 1.2vw, 1.15rem)',
+                fontWeight: 700,
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+                opacity: 0.9,
+                marginBottom: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span>Check in</span>
+                <span style={{ opacity: 0.5 }}>•</span>
+                <span>{startInfo.date}</span>
               </div>
-            ) : (
-              <div
-                className="status-badge"
-                style={{
-                  display: 'inline-flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0.6rem 2.4rem',
-                  borderRadius: '24px',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                <div style={{
-                  fontSize: 'clamp(0.85rem, 1.2vw, 1.15rem)',
-                  fontWeight: 700,
-                  letterSpacing: '1.5px',
-                  textTransform: 'uppercase',
-                  opacity: 0.9,
-                  marginBottom: '2px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <span>START DATE</span>
-                  <span style={{ opacity: 0.5 }}>•</span>
-                  <span>{startInfo.date}</span>
-                </div>
-                <div style={{
-                  fontSize: 'clamp(2.5rem, 4.2vw, 4.5rem)',
-                  fontWeight: 900,
-                  letterSpacing: '2px',
-                  lineHeight: 1.05,
-                  fontFamily: 'monospace'
-                }}>
-                  {startInfo.time}
-                </div>
+              <div style={{
+                fontSize: 'clamp(2.5rem, 4.2vw, 4.5rem)',
+                fontWeight: 900,
+                letterSpacing: '2px',
+                lineHeight: 1.05,
+                fontFamily: 'monospace'
+              }}>
+                {startInfo.time}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Resizer Divider Bar */}

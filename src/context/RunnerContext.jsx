@@ -63,7 +63,16 @@ export const RunnerProvider = ({ children }) => {
   const [castEvent, setCastEvent] = useState(null);
 
   const loadStations = useCallback(async () => {
-    // 1. Try edge function invoke via Supabase client (handles CORS + authorization headers automatically)
+    // 1. Direct DB select first (authoritative list of stations for the event)
+    try {
+      const { data, error } = await supabase.from('stations').select('id, name, type, sequence_order').eq('event_id', CURRENT_EVENT_ID);
+      if (!error && data && data.length > 0) {
+        setStations(data);
+        return;
+      }
+    } catch (e) {}
+
+    // 2. Try edge function invoke via Supabase client (fallback)
     try {
       const { data, error } = await supabase.functions.invoke(
         `login-options?event_id=${encodeURIComponent(CURRENT_EVENT_ID)}`,
@@ -85,7 +94,7 @@ export const RunnerProvider = ({ children }) => {
       }
     } catch (e) {}
 
-    // 2. Direct fetch fallback
+    // 3. Direct fetch fallback
     try {
       const res = await fetch(`https://kjtbfzsgnsvkfjgayuys.supabase.co/functions/v1/login-options?event_id=${CURRENT_EVENT_ID}`);
       if (res.ok) {
@@ -105,12 +114,6 @@ export const RunnerProvider = ({ children }) => {
           }
         }
       }
-    } catch (e) {}
-
-    // 3. Direct DB select fallback if permitted
-    try {
-      const { data } = await supabase.from('stations').select('id, name, type, sequence_order').eq('event_id', CURRENT_EVENT_ID);
-      if (data && data.length > 0) setStations(data);
     } catch (e) {}
   }, []);
 
@@ -206,6 +209,12 @@ export const RunnerProvider = ({ children }) => {
         } catch {}
         return;
       }
+      if (payload.event === 'monitor_cast' || payload.event === 'cast') {
+        if (payload.payload) {
+          setCastEvent(payload.payload);
+        }
+        return;
+      }
       const row = payload.payload?.record;
       if (!row || !row.bib) return;
       if (row.bib === 'RUNNER_CONFIG') {
@@ -222,12 +231,24 @@ export const RunnerProvider = ({ children }) => {
       if (!cancelled) channel.subscribe();
     });
 
+    // Also subscribe to public monitor stream for cross-origin/cross-device casting
+    const monitorChannel = supabase.channel('rohn_monitor_stream', {
+      config: { broadcast: { ack: false } }
+    });
+    monitorChannel.on('broadcast', { event: 'monitor_cast' }, ({ payload }) => {
+      if (payload) {
+        setCastEvent(payload);
+      }
+    });
+    monitorChannel.subscribe();
+
     const handleFocus = () => loadRunners();
     window.addEventListener('focus', handleFocus);
 
     return () => {
       cancelled = true;
       supabase.removeChannel(channel);
+      supabase.removeChannel(monitorChannel);
       window.removeEventListener('focus', handleFocus);
     };
   }, [loadRunners]);
@@ -275,6 +296,15 @@ export const RunnerProvider = ({ children }) => {
       const bc = new BroadcastChannel('rohn_monitor_channel');
       bc.postMessage(event);
       bc.close();
+    } catch {}
+
+    try {
+      const ch = supabase.channel('rohn_monitor_stream');
+      ch.send({
+        type: 'broadcast',
+        event: 'monitor_cast',
+        payload: event
+      }).catch(() => {});
     } catch {}
   };
 
