@@ -32,8 +32,8 @@ async function fetchAllPublicResults() {
 
 export const DEFAULT_STATIONS = [
   { id: '37a6e24a-32ae-47fb-806f-6255bfc07a44', name: 'Start', type: 'START', sequence_order: 1 },
-  { id: '3b63e9b7-4dbf-432e-8281-e8d7e4d22d8b', name: 'A1', type: 'CP', sequence_order: 2 },
-  { id: 'c0207dcc-10d2-420c-aeaa-707b1924e569', name: 'A2', type: 'CP', sequence_order: 3 },
+  { id: '6cd9e19b-90c9-4c53-bc93-5976632dd4bc', name: 'A1', type: 'CP', sequence_order: 2 },
+  { id: 'b021a57d-5c13-463c-970c-9100c3f09d21', name: 'A2', type: 'CP', sequence_order: 3 },
   { id: '4f7f4393-8103-4b28-a28a-e015c712d4f5', name: 'Finish', type: 'FINISH', sequence_order: 4 },
 ];
 

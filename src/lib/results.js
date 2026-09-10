@@ -359,7 +359,9 @@ export function getRunnerDisplayTime(r) {
 export const KNOWN_STATION_MAP = {
   '37a6e24a-32ae-47fb-806f-6255bfc07a44': 'Start',
   '3b63e9b7-4dbf-432e-8281-e8d7e4d22d8b': 'A1',
+  '6cd9e19b-90c9-4c53-bc93-5976632dd4bc': 'A1',
   'c0207dcc-10d2-420c-aeaa-707b1924e569': 'A2',
+  'b021a57d-5c13-463c-970c-9100c3f09d21': 'A2',
   '4f7f4393-8103-4b28-a28a-e015c712d4f5': 'Finish',
   'a1': 'A1',
   'a2': 'A2',

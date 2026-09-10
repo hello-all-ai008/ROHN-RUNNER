@@ -159,17 +159,7 @@ function Monitor() {
     }
   }, [monitorId]);
 
-  // Restore last cast event from localStorage on mount only.
-  useEffect(() => {
-    const saved = localStorage.getItem('react_cast_event') || localStorage.getItem('rohn_monitor_cast');
-    if (saved) {
-      try {
-        const evt = JSON.parse(saved);
-        if (evt) applyEvent(evt);
-      } catch (e) { }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only restore, applyEvent already reflects the correct monitorId at mount
-  }, []);
+  // (Removed) Do not restore last cast event from localStorage on mount to prevent showing old bib
 
   // React to live castEvent updates from context.
   useEffect(() => {
