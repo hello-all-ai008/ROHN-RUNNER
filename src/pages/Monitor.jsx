@@ -172,12 +172,32 @@ function Monitor() {
     }
   }, [monitorId]);
 
-  // (Removed) Do not restore last cast event from localStorage on mount to prevent showing old bib
+  // Restore the last cast for this monitor across a page reload, so the
+  // display keeps showing the most recent scan until either a new scan
+  // arrives or staff explicitly press "ปิดแสดงรายชื่อ" (closeDisplay below,
+  // which clears these same keys). Scoped to this monitorId/'all' via the
+  // same targetId check applyEvent already does.
+  useEffect(() => {
+    const saved = localStorage.getItem('rohn_monitor_cast') || localStorage.getItem('react_cast_event');
+    if (!saved) return;
+    try {
+      const evt = JSON.parse(saved);
+      applyEvent(evt);
+    } catch {}
+  }, [applyEvent]);
 
   // React to live castEvent updates from context.
   useEffect(() => {
     if (castEvent) applyEvent(castEvent);
   }, [castEvent, applyEvent]);
+
+  const closeDisplay = () => {
+    setActive(false);
+    try {
+      localStorage.removeItem('rohn_monitor_cast');
+      localStorage.removeItem('react_cast_event');
+    } catch {}
+  };
 
   // Subscribe to realtime transports. Must NOT depend on castEvent, or the
   // channel/BroadcastChannel/listener gets torn down and recreated on every
@@ -426,7 +446,7 @@ function Monitor() {
             {active && (
               <button
                 type="button"
-                onClick={() => setActive(false)}
+                onClick={closeDisplay}
                 style={{
                   backgroundColor: '#ef4444',
                   color: '#ffffff',
