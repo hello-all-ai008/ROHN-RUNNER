@@ -220,16 +220,19 @@ function Monitor() {
     if (!manualBib.trim()) return;
     const runner = getRunnerByBib(manualBib.trim());
     if (runner) {
+      const { checkinTime, isRealCheckin } = resolveCheckinTime(null, runner, runner.gun_start_time);
       castToMonitor(monitorId, runner.bib, runner.name, runner.distance, runner.ageGroup, {
         source: 'rohn_runner_scanner',
         gunStartTime: runner.gun_start_time,
-        checkinTime: runner.checkin || runner.checked_in_at || new Date().toISOString()
+        checkinTime: checkinTime,
+        isRealCheckin: isRealCheckin
       });
     } else {
       castToMonitor(monitorId, manualBib.trim(), 'NOT FOUND', '-', '-', {
         source: 'rohn_runner_scanner',
         gunStartTime: null,
-        checkinTime: null
+        checkinTime: null,
+        isRealCheckin: false
       });
     }
     setManualBib('');
