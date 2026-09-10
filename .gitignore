@@ -27,3 +27,7 @@ dist-ssr
 
 .env*
 !.env.example
+
+# Sibling directories — not part of this project
+../tester/
+../to-do-list/

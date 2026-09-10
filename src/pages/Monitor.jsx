@@ -46,15 +46,23 @@ function formatStartDateTime(startVal, fallbackRunners = []) {
   return { time: '--:--:--', date: eventDateStr, hasTime: false };
 }
 
-// Single source of truth for resolving a "check in" timestamp. Never lets a
-// gunStartTime fallback be mistaken for a real checkin — callers must use
-// `isRealCheckin` to decide how to label the value.
-function resolveCheckinTime(evt, runner, gunStartTime) {
-  if (evt?.checkinTime) return { checkinTime: evt.checkinTime, isRealCheckin: true };
-  if (runner?.checkin) return { checkinTime: runner.checkin, isRealCheckin: true };
-  if (runner?.checked_in_at) return { checkinTime: runner.checked_in_at, isRealCheckin: true };
-  if (gunStartTime) return { checkinTime: gunStartTime, isRealCheckin: false };
-  return { checkinTime: null, isRealCheckin: false };
+// Resolves category gun_start_time from runner or fallback from runners list with same distance
+export function getGunStartTimeByDistance(runner, runnersList = []) {
+  if (runner?.gun_start_time) return runner.gun_start_time;
+  if (!runner || !Array.isArray(runnersList)) return null;
+  const distNum = String(runner.distance || '').replace(/\D/g, '');
+  if (distNum) {
+    const match = runnersList.find(r => {
+      const d = String(r.distance || '').replace(/\D/g, '');
+      return d === distNum && r.gun_start_time;
+    });
+    if (match?.gun_start_time) return match.gun_start_time;
+  }
+  if (runner.cat_name) {
+    const matchCat = runnersList.find(r => r.cat_name === runner.cat_name && r.gun_start_time);
+    if (matchCat?.gun_start_time) return matchCat.gun_start_time;
+  }
+  return null;
 }
 
 function Monitor() {
@@ -67,6 +75,9 @@ function Monitor() {
   // referentially stable (applyEvent) never close over a stale version.
   const getRunnerByBibRef = useRef(getRunnerByBib);
   useEffect(() => { getRunnerByBibRef.current = getRunnerByBib; });
+
+  const runnersRef = useRef(runners);
+  useEffect(() => { runnersRef.current = runners; }, [runners]);
 
   const [active, setActive] = useState(false);
   const [displayData, setDisplayData] = useState({
@@ -141,19 +152,21 @@ function Monitor() {
     if (targetId === String(monitorId) || targetId === 'all') {
       const bib = evt.bib || '----';
       const runner = getRunnerByBibRef.current(bib);
-      const gunStartTime = evt.gunStartTime || runner?.gun_start_time || null;
-      const { checkinTime, isRealCheckin } = resolveCheckinTime(evt, runner, gunStartTime);
-      const isScanner = evt.source === 'rohn_runner_scanner';
+      const isFromAdmin = evt.source === 'rohn_admin_checkin';
+      const gunStartTime = evt.gunStartTime || runner?.gun_start_time || getGunStartTimeByDistance(runner, runnersRef.current);
+      const checkinTime = isFromAdmin
+        ? (evt.checkinTime || runner?.checked_in_at || runner?.checkin || null)
+        : null;
 
       setDisplayData({
         bib: bib,
         name: evt.name || runner?.name || 'Runner Name',
         distance: evt.distance || runner?.distance || '',
         ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
-        source: isScanner ? 'rohn_runner_scanner' : 'rohn_admin_checkin',
+        source: isFromAdmin ? 'rohn_admin_checkin' : 'rohn_runner_scanner',
         gunStartTime: gunStartTime,
         checkinTime: checkinTime,
-        isRealCheckin: isRealCheckin
+        isRealCheckin: isFromAdmin
       });
       setActive(true);
     }
@@ -210,12 +223,12 @@ function Monitor() {
     if (!manualBib.trim()) return;
     const runner = getRunnerByBib(manualBib.trim());
     if (runner) {
-      const { checkinTime, isRealCheckin } = resolveCheckinTime(null, runner, runner.gun_start_time);
+      const gunStartTime = runner.gun_start_time || getGunStartTimeByDistance(runner, runners);
       castToMonitor(monitorId, runner.bib, runner.name, runner.distance, runner.ageGroup, {
         source: 'rohn_runner_scanner',
-        gunStartTime: runner.gun_start_time,
-        checkinTime: checkinTime,
-        isRealCheckin: isRealCheckin
+        gunStartTime: gunStartTime,
+        checkinTime: null,
+        isRealCheckin: false
       });
     } else {
       castToMonitor(monitorId, manualBib.trim(), 'NOT FOUND', '-', '-', {
@@ -229,9 +242,11 @@ function Monitor() {
   };
 
   const displayRunner = getRunnerByBib(displayData.bib);
-  const { checkinTime: effectiveTime, isRealCheckin } = displayData.checkinTime
-    ? { checkinTime: displayData.checkinTime, isRealCheckin: displayData.isRealCheckin }
-    : resolveCheckinTime(null, displayRunner, displayData.gunStartTime || displayRunner?.gun_start_time);
+  const isAdminCheckin = displayData.source === 'rohn_admin_checkin';
+  const statusLabel = isAdminCheckin ? 'Check in' : 'Start';
+  const effectiveTime = isAdminCheckin
+    ? (displayData.checkinTime || displayRunner?.checked_in_at || displayRunner?.checkin)
+    : (displayData.gunStartTime || displayRunner?.gun_start_time || getGunStartTimeByDistance(displayRunner, runners));
   const startInfo = formatStartDateTime(effectiveTime, runners);
 
   return (
@@ -500,7 +515,7 @@ function Monitor() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <span>{isRealCheckin ? 'Check in' : 'Start (scheduled)'}</span>
+                <span>{statusLabel}</span>
                 <span style={{ opacity: 0.5 }}>•</span>
                 <span>{startInfo.date}</span>
               </div>

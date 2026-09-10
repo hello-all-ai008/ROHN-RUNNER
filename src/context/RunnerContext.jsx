@@ -262,12 +262,18 @@ export const RunnerProvider = ({ children }) => {
     const runner = smartFindRunner(bib, runners);
 
     if (runner) {
+      let gunStartTime = runner.gun_start_time || null;
+      if (!gunStartTime && runners.length > 0) {
+        const distNum = String(runner.distance || '').replace(/\D/g, '');
+        const match = runners.find(r => String(r.distance || '').replace(/\D/g, '') === distNum && r.gun_start_time);
+        gunStartTime = match?.gun_start_time || null;
+      }
       return {
         success: true,
         name: runner.name || 'Runner',
         distance: runner.distance || '',
         ageGroup: runner.ageGroup || runner.age_group || '',
-        gunStartTime: runner.gun_start_time || null,
+        gunStartTime: gunStartTime,
         runner: runner
       };
     }
