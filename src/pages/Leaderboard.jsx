@@ -44,12 +44,6 @@ function Leaderboard() {
   return (
     <div className="lb-page-container">
       <style>{`
-        .groups-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-          gap: 1rem;
-          padding: 0 1.25rem;
-        }
         .groups-grid > div {
           background: #ffffff;
           border: 1px solid rgba(0,0,0,0.06);
@@ -144,12 +138,23 @@ function Leaderboard() {
           }
           .overall-champ-row {
             padding: 0.4rem 0.5rem !important;
-            gap: 0.4rem !important;
+            gap: 0.35rem !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
           }
           .overall-champ-row > div:first-child > div:first-child {
              width: 24px !important;
              height: 24px !important;
              font-size: 0.6rem !important;
+          }
+          .overall-champ-name {
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+          }
+          .overall-champ-time {
+            text-align: left !important;
+            padding-left: 0 !important;
           }
           .lb-header-section {
             padding: 0.75rem 0.5rem !important;
@@ -272,7 +277,7 @@ function Leaderboard() {
                       <div style={{ minWidth: 0, flex: 1 }}>
                         {item.male ? (
                           <>
-                            <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <div className="overall-champ-name" style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               🥇 {item.male.name}
                             </div>
                             <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -286,7 +291,7 @@ function Leaderboard() {
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'right', flexShrink: 0, paddingLeft: '8px' }}>
+                    <div className="overall-champ-time" style={{ textAlign: 'right', flexShrink: 0, paddingLeft: '8px' }}>
                       <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 800, color: item.male ? '#16a34a' : '#94a3b8', whiteSpace: 'nowrap' }}>
                         {item.male ? getRunnerDisplayTime(item.male) : '--:--:--'}
                       </div>
@@ -307,7 +312,7 @@ function Leaderboard() {
                       <div style={{ minWidth: 0, flex: 1 }}>
                         {item.female ? (
                           <>
-                            <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <div className="overall-champ-name" style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               🥇 {item.female.name}
                             </div>
                             <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -321,7 +326,7 @@ function Leaderboard() {
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'right', flexShrink: 0, paddingLeft: '8px' }}>
+                    <div className="overall-champ-time" style={{ textAlign: 'right', flexShrink: 0, paddingLeft: '8px' }}>
                       <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 800, color: item.female ? '#16a34a' : '#94a3b8', whiteSpace: 'nowrap' }}>
                         {item.female ? getRunnerDisplayTime(item.female) : '--:--:--'}
                       </div>
@@ -373,15 +378,15 @@ function Leaderboard() {
                     <div className={`rank ${rankClass}`}>{i+1}</div>
                     <div className="lb-row-body" style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
                       <div className="lb-row-nameline" style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
-                        <div className="lb-row-name" style={{ fontWeight: 'bold', fontSize: '1.05rem', color: 'var(--text-main)' }}>{r.name}</div>
-                        <div className="lb-row-bib" style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.04)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>BIB: {r.bib}</div>
+                        <div className="lb-row-name" style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{r.name}</div>
+                        <div className="lb-row-bib" style={{ color: 'var(--text-muted)', background: 'rgba(0,0,0,0.04)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>BIB: {r.bib}</div>
                       </div>
                       <div className="lb-row-time" style={{ textAlign: 'right' }}>
                         <span className="lb-row-bib-mobile" style={{ display: 'none' }}>BIB: {r.bib}</span>
-                        <div className="lb-row-time-value" style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', color: 'var(--success-green)', fontWeight: 'bold' }}>
+                        <div className="lb-row-time-value" style={{ fontFamily: 'var(--font-display)', color: 'var(--success-green)', fontWeight: 'bold' }}>
                           {getRunnerDisplayTime(r)}
                         </div>
-                        <div className="lb-row-time-label" style={{ fontSize: '0.72rem', color: getRunnerNetTime(r).isNet ? 'var(--text-muted)' : '#0284c7', fontWeight: 600 }}>
+                        <div className="lb-row-time-label" style={{ color: getRunnerNetTime(r).isNet ? 'var(--text-muted)' : '#0284c7', fontWeight: 600 }}>
                           {getRunnerNetTime(r).isNet ? 'Net Time' : 'Finish Time'}
                         </div>
                       </div>
