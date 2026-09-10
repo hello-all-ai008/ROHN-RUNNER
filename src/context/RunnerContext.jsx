@@ -306,11 +306,17 @@ export const RunnerProvider = ({ children }) => {
 
     try {
       const ch = supabase.channel('rohn_monitor_stream');
+      // One-off send channel per scan (broadcast works even before
+      // .subscribe() via realtime-js's REST fallback) — must be explicitly
+      // removed after sending, or the client accumulates a new channel
+      // object per scan for the lifetime of the tab (hundreds on race day).
       ch.send({
         type: 'broadcast',
         event: 'monitor_cast',
         payload: event
-      }).catch(() => {});
+      }).finally(() => {
+        supabase.removeChannel(ch);
+      });
     } catch {}
   };
 
