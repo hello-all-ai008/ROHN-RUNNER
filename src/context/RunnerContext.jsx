@@ -293,6 +293,7 @@ export const RunnerProvider = ({ children }) => {
         distance: runner.distance || '',
         ageGroup: runner.ageGroup || runner.age_group || '',
         gunStartTime: gunStartTime,
+        cat_color: runner.cat_color || null,
         runner: runner
       };
     }

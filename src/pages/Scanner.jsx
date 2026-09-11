@@ -33,7 +33,8 @@ function Scanner() {
 
       castToMonitor(monitorId, officialBib, result.name, result.distance, result.ageGroup, {
         source: 'rohn_runner_scanner',
-        gunStartTime: result.gunStartTime
+        gunStartTime: result.gunStartTime,
+        cat_color: result.cat_color
       });
 
       setMessage({ 

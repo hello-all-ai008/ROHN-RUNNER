@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
 import { supabase } from '../lib/supabaseClient';
+import { computeRunnerRanks } from '../components/ESlip.jsx';
 import logoFull from '../LOGO/logo-rohn-full.png';
 import logoBaanPong from '../LOGO/logo-BaanPong.jpg';
 import logoMaekhaning from '../LOGO/logo-maekhaning.jpg';
@@ -85,9 +86,12 @@ function Monitor() {
     name: 'Runner Name',
     distance: '',
     ageGroup: '',
+    catColor: null,
     source: 'rohn_runner_scanner',
     gunStartTime: null,
     checkinTime: null,
+    finishTime: null,
+    finishAt: null,
     isRealCheckin: false
   });
   const [manualBib, setManualBib] = useState('');
@@ -153,6 +157,7 @@ function Monitor() {
       const bib = evt.bib || '----';
       const runner = getRunnerByBibRef.current(bib);
       const isFromAdmin = evt.source === 'rohn_admin_checkin';
+      const isAdminFinish = evt.source === 'rohn_admin_finish';
       const gunStartTime = evt.gunStartTime || runner?.gun_start_time || getGunStartTimeByDistance(runner, runnersRef.current);
       const checkinTime = isFromAdmin
         ? (evt.checkinTime || runner?.checked_in_at || runner?.checkin || null)
@@ -163,9 +168,12 @@ function Monitor() {
         name: evt.name || runner?.name || 'Runner Name',
         distance: evt.distance || runner?.distance || '',
         ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
-        source: isFromAdmin ? 'rohn_admin_checkin' : 'rohn_runner_scanner',
+        catColor: evt.cat_color || runner?.cat_color || null,
+        source: isAdminFinish ? 'rohn_admin_finish' : (isFromAdmin ? 'rohn_admin_checkin' : 'rohn_runner_scanner'),
         gunStartTime: gunStartTime,
         checkinTime: checkinTime,
+        finishTime: isAdminFinish ? (evt.finishTime || null) : null,
+        finishAt: isAdminFinish ? (evt.finishAt || null) : null,
         isRealCheckin: isFromAdmin
       });
       setActive(true);
@@ -248,14 +256,16 @@ function Monitor() {
         source: 'rohn_runner_scanner',
         gunStartTime: gunStartTime,
         checkinTime: null,
-        isRealCheckin: false
+        isRealCheckin: false,
+        cat_color: runner.cat_color || null
       });
     } else {
       castToMonitor(monitorId, manualBib.trim(), 'NOT FOUND', '-', '-', {
         source: 'rohn_runner_scanner',
         gunStartTime: null,
         checkinTime: null,
-        isRealCheckin: false
+        isRealCheckin: false,
+        cat_color: null
       });
     }
     setManualBib('');
@@ -263,7 +273,9 @@ function Monitor() {
 
   const displayRunner = getRunnerByBib(displayData.bib);
   const isAdminCheckin = displayData.source === 'rohn_admin_checkin';
-  const statusLabel = isAdminCheckin ? 'Check in' : 'Start';
+  const isAdminFinish = displayData.source === 'rohn_admin_finish';
+  const statusLabel = isAdminFinish ? 'Finish' : (isAdminCheckin ? 'Check in' : 'Start');
+  const finishDateInfo = isAdminFinish ? formatStartDateTime(displayData.finishAt, runners) : null;
   const effectiveTime = isAdminCheckin
     ? (displayData.checkinTime || displayRunner?.checked_in_at || displayRunner?.checkin)
     : (displayData.gunStartTime || displayRunner?.gun_start_time || getGunStartTimeByDistance(displayRunner, runners));
@@ -273,6 +285,11 @@ function Monitor() {
   const rawDist = String(displayData.distance || displayRunner?.distance || '').toUpperCase().replace(/\s+/g, '');
   const is10k = rawDist.includes('10K') || rawDist === '10' || rawDist.startsWith('10');
   const mapImage = is10k ? map10k : map5k;
+
+  const { overallRank, catRank } = useMemo(
+    () => (isAdminFinish && displayRunner ? computeRunnerRanks(displayRunner, runners) : { overallRank: null, catRank: null }),
+    [displayRunner, runners, isAdminFinish]
+  );
 
   return (
     <div style={{ backgroundColor: 'var(--bg-dark)', height: '100vh', overflow: 'hidden' }} className={active ? 'show-active' : ''}>
@@ -522,9 +539,36 @@ function Monitor() {
             boxSizing: 'border-box',
             animation: 'slideInLeft 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
           }}>
-            <div className="monitor-bib" style={{ fontSize: 'clamp(4.5rem, 8vw, 9.5rem)', margin: 0, lineHeight: 1, width: '100%', textAlign: 'center', wordBreak: 'break-all' }}>{displayData.bib}</div>
+            <div className="monitor-bib" style={{
+              fontSize: 'clamp(4.5rem, 8vw, 9.5rem)',
+              margin: 0,
+              lineHeight: 1,
+              width: '100%',
+              textAlign: 'center',
+              wordBreak: 'break-all',
+              color: displayData.catColor || 'var(--success-green)',
+              textShadow: displayData.catColor ? `0 0 40px ${displayData.catColor}66` : undefined
+            }}>{displayData.bib}</div>
             <div className="monitor-name" style={{ fontSize: 'clamp(1.8rem, 3.2vw, 3.8rem)', margin: '0.8rem 0', textAlign: 'center', wordBreak: 'break-word', width: '100%' }}>{displayData.name}</div>
-            <div style={{ fontSize: 'clamp(1.1rem, 2vw, 2.2rem)', color: 'var(--text-muted)', marginBottom: '1.2rem', fontWeight: 500, textAlign: 'center' }}>{displayData.distance} • {displayData.ageGroup}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '1.2rem', width: '100%' }}>
+              {displayData.distance && (
+                <span style={{
+                  background: displayData.catColor || '#0f172a',
+                  color: '#ffffff',
+                  padding: 'clamp(0.15rem, 0.5vw, 0.35rem) clamp(0.7rem, 1.7vw, 1.2rem)',
+                  borderRadius: '99px',
+                  fontSize: 'clamp(1rem, 1.9vw, 1.7rem)',
+                  fontWeight: 800,
+                  letterSpacing: '0.5px'
+                }}>
+                  {displayData.distance}{displayRunner?.cat_name ? ` : ${displayRunner.cat_name}` : ''}
+                </span>
+              )}
+              {displayData.distance && displayData.ageGroup && (
+                <span style={{ fontSize: 'clamp(1.3rem, 2.1vw, 2.1rem)', color: 'var(--text-muted)', opacity: 0.5 }}>•</span>
+              )}
+              <span style={{ fontSize: 'clamp(1.3rem, 2.1vw, 2.1rem)', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'center' }}>{displayData.ageGroup}</span>
+            </div>
             <div
               className="status-badge"
               style={{
@@ -535,7 +579,14 @@ function Monitor() {
                 padding: '0.5rem clamp(1.2rem, 2vw, 2.2rem)',
                 borderRadius: '24px',
                 maxWidth: '100%',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                whiteSpace: 'nowrap',
+                ...(displayData.catColor ? {
+                  '--status-bg': `${displayData.catColor}33`,
+                  '--status-color': displayData.catColor,
+                  '--status-glow': `${displayData.catColor}66`,
+                  '--status-glow-fade': `${displayData.catColor}00`
+                } : {})
               }}
             >
               <div style={{
@@ -551,7 +602,7 @@ function Monitor() {
               }}>
                 <span>{statusLabel}</span>
                 <span style={{ opacity: 0.5 }}>•</span>
-                <span>{startInfo.date}</span>
+                <span>{isAdminFinish ? finishDateInfo?.date : startInfo.date}</span>
               </div>
               <div style={{
                 fontSize: 'clamp(2.2rem, 3.6vw, 4.2rem)',
@@ -560,9 +611,14 @@ function Monitor() {
                 lineHeight: 1.05,
                 fontFamily: 'monospace'
               }}>
-                {startInfo.time}
+                {isAdminFinish ? displayData.finishTime : startInfo.time}
               </div>
             </div>
+            {isAdminFinish && catRank && overallRank && catRank !== '—' && overallRank !== '—' && (
+              <div style={{ fontSize: 'clamp(1.1rem, 1.8vw, 1.8rem)', color: 'var(--text-muted)', fontWeight: 600, textAlign: 'center', marginTop: '0.5rem' }}>
+                อันดับรุ่น #{catRank} • อันดับรวม #{overallRank}
+              </div>
+            )}
           </div>
 
           {/* Resizer Divider Bar */}
