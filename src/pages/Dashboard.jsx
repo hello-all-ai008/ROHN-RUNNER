@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
 import logoFull from '../LOGO/logo-rohn-full.png';
 import { ArrowLeft } from 'lucide-react';
-import { formatTime, rankMapByBib, getRunnerRaceStatus } from '../lib/results';
+import { formatTime, formatDuration, rankMapByBib, getRunnerRaceStatus, getRunnerStartTime, getRunnerNetTime } from '../lib/results';
 import AdvancedTable from '../components/AdvancedTable';
 
 const STATUS_LABEL = {
@@ -18,6 +18,15 @@ const STATUS_COLOR = {
   'In Race': 'var(--accent-blue)',
   DNS: 'var(--text-muted)',
   DNF: 'var(--warn)',
+  'Pre-registered': 'var(--text-muted)',
+  'Checked In': 'var(--accent-blue)',
+};
+
+// Registration-desk state, shown only when the runner hasn't started yet
+// (raceStatusCode === 'DNS') — otherwise the computed race status wins.
+const REG_LABEL = {
+  PRE_REGISTERED: 'Pre-registered',
+  CHECKED_IN: 'Checked In',
 };
 
 function Dashboard() {
@@ -41,6 +50,17 @@ function Dashboard() {
     const set = new Set();
     liveRunners.forEach(r => { if (r.distance) set.add(r.distance); });
     return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [liveRunners]);
+
+  // First cat_color seen per distance — same "distance → color" lookup used
+  // on /leaderboard and /monitor, so this page reads as part of the same
+  // per-distance color language.
+  const distanceColorMap = useMemo(() => {
+    const map = {};
+    liveRunners.forEach(r => {
+      if (r.distance && r.cat_color && !map[r.distance]) map[r.distance] = r.cat_color;
+    });
+    return map;
   }, [liveRunners]);
 
   const totalCount = liveRunners.length;
@@ -73,11 +93,17 @@ function Dashboard() {
   // rather than only computed at render time via col.render.
   const tableRows = useMemo(() => runnersWithStatus.map(r => {
     const rank = ranks.get(r.bib) || null;
+    const netInfo = getRunnerNetTime(r);
+    const startEpoch = netInfo.startEpoch ?? getRunnerStartTime(r, Date.now());
+    const combinedStatus = r.raceStatusCode === 'DNS'
+      ? (REG_LABEL[r.registration_status] || r.registration_status || 'DNS')
+      : (STATUS_LABEL[r.raceStatusCode] || r.raceStatusCode);
     return {
       ...r,
-      raceStatus: STATUS_LABEL[r.raceStatusCode] || r.raceStatusCode,
+      combinedStatus,
+      startTime: formatTime(startEpoch) || '-',
       finishTime: formatTime(r.finish) || '-',
-      checkpointCount: Object.keys(r.cps || {}).length,
+      netTime: netInfo.netTimeMs ? formatDuration(netInfo.netTimeMs) : '-',
       rankDisplay: rank ? `#${rank}` : '-',
     };
   }), [runnersWithStatus, ranks]);
@@ -85,18 +111,27 @@ function Dashboard() {
   const columns = useMemo(() => [
     { key: 'name', label: 'Name', defaultWidth: 180 },
     { key: 'bib', label: 'BIB', defaultWidth: 90 },
-    { key: 'distance', label: 'Distance', defaultWidth: 100 },
-    { key: 'gender', label: 'Gender', defaultWidth: 90 },
-    { key: 'registration_status', label: 'Reg. Status', defaultWidth: 130 },
     {
-      key: 'raceStatus',
-      label: 'Race Status',
-      defaultWidth: 110,
+      key: 'distance',
+      label: 'Distance',
+      defaultWidth: 100,
+      render: (val, row) => (
+        <span style={{ background: row.cat_color || '#0f172a', color: '#ffffff', padding: '2px 10px', borderRadius: '99px', fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+          {val}
+        </span>
+      ),
+    },
+    { key: 'gender', label: 'Gender', defaultWidth: 90 },
+    {
+      key: 'combinedStatus',
+      label: 'Status',
+      defaultWidth: 130,
       render: (val) => <span style={{ color: STATUS_COLOR[val], fontWeight: 700 }}>{val}</span>,
     },
+    { key: 'startTime', label: 'Start', defaultWidth: 100 },
     { key: 'finishTime', label: 'Finish', defaultWidth: 100 },
+    { key: 'netTime', label: 'Net Time', defaultWidth: 100 },
     { key: 'age_group', label: 'Age Grp', defaultWidth: 160 },
-    { key: 'checkpointCount', label: 'Checkpoints', defaultWidth: 100, isNumeric: true, align: 'center' },
     { key: 'rankDisplay', label: 'Grp Rank', defaultWidth: 90, align: 'center' },
   ], []);
 
@@ -152,8 +187,12 @@ function Dashboard() {
           <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)' }}>Summary by Distance</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem' }}>
             {perDistanceStats.map(s => (
-              <div key={s.distance} className="card" style={{ padding: '0.8rem 0.5rem' }}>
-                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.5rem', textAlign: 'center' }}>{s.distance} <span style={{ fontWeight: 600, fontSize: '0.7rem', color: 'var(--text-muted)' }}>({s.total})</span></div>
+              <div key={s.distance} className="card" style={{
+                padding: '0.8rem 0.5rem',
+                border: `2px solid ${distanceColorMap[s.distance] || 'var(--line)'}`,
+                background: distanceColorMap[s.distance] ? `${distanceColorMap[s.distance]}1a` : 'var(--bg-card)'
+              }}>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: distanceColorMap[s.distance] || 'var(--text-main)', marginBottom: '0.5rem', textAlign: 'center' }}>{s.distance} <span style={{ fontWeight: 600, fontSize: '0.7rem', color: 'var(--text-muted)' }}>({s.total})</span></div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.2rem', textAlign: 'center' }}>
                   <div>
                     <div style={{ fontSize: '1rem', fontWeight: 800, color: STATUS_COLOR.Finished }}>{s.finished}</div>
