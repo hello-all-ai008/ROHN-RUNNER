@@ -98,7 +98,7 @@ function Monitor() {
     try {
       const saved = localStorage.getItem('rohn_monitor_split_ratio');
       const val = parseFloat(saved);
-      return !isNaN(val) && val >= 20 && val <= 75 ? val : 38;
+      return !isNaN(val) && val >= 25 && val <= 60 ? val : 38;
     } catch {
       return 38;
     }
@@ -119,7 +119,7 @@ function Monitor() {
       const totalWidth = window.innerWidth;
       if (!totalWidth) return;
       const newRatio = (clientX / totalWidth) * 100;
-      const clamped = Math.min(Math.max(newRatio, 20), 75);
+      const clamped = Math.min(Math.max(newRatio, 25), 60);
       setLeftRatio(clamped);
     };
 
@@ -269,59 +269,69 @@ function Monitor() {
     : (displayData.gunStartTime || displayRunner?.gun_start_time || getGunStartTimeByDistance(displayRunner, runners));
   const startInfo = formatStartDateTime(effectiveTime, runners);
 
+  // Normalize distance check for 10km map (map10k2.jpg) vs 5km map (map5k2.jpg)
+  const rawDist = String(displayData.distance || displayRunner?.distance || '').toUpperCase().replace(/\s+/g, '');
+  const is10k = rawDist.includes('10K') || rawDist === '10' || rawDist.startsWith('10');
+  const mapImage = is10k ? map10k : map5k;
+
   return (
     <div style={{ backgroundColor: 'var(--bg-dark)', height: '100vh', overflow: 'hidden' }} className={active ? 'show-active' : ''}>
       <style>{`
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           #activeState, #idleState {
             flex-direction: column !important;
             padding: 1rem !important;
-            padding-top: 8.5rem !important;
+            padding-top: 5.5rem !important;
             justify-content: flex-start !important;
+            overflow-y: auto !important;
           }
           #activeState > div:first-child {
             flex: 0 0 auto !important;
             width: 100% !important;
+            max-width: 100% !important;
             padding: 0.5rem !important;
           }
           #activeState > div:first-child .monitor-bib {
-            font-size: clamp(3.5rem, 15vw, 5rem) !important;
+            font-size: clamp(3.2rem, 13vw, 4.8rem) !important;
           }
           #activeState > div:first-child .monitor-name {
-            font-size: clamp(1.2rem, 7vw, 2rem) !important;
+            font-size: clamp(1.2rem, 6vw, 1.8rem) !important;
             margin: 0.2rem 0 !important;
           }
           #activeState > div:first-child > div:nth-child(3) {
-            font-size: clamp(0.9rem, 4vw, 1.2rem) !important;
-            margin-bottom: 0.5rem !important;
+            font-size: clamp(0.9rem, 3.5vw, 1.15rem) !important;
+            margin-bottom: 0.4rem !important;
           }
           .resizer-bar {
             display: none !important;
           }
           #activeState > div:last-child {
-            flex: 1 1 auto !important;
+            flex: 0 0 auto !important;
             width: 100% !important;
+            max-width: 100% !important;
             height: auto !important;
-            padding: 0 !important;
+            max-height: none !important;
+            padding: 0.5rem 0 !important;
             justify-content: center !important;
           }
           #activeState > div:last-child img:first-child {
-            max-height: 40vh !important;
+            max-height: 42vh !important;
+            width: auto !important;
           }
           .monitor-logos {
             gap: 1rem !important;
-            padding: 0.5rem 1rem !important;
+            padding: 0.4rem 1rem !important;
             margin-top: 0.5rem !important;
           }
           .monitor-logos img {
-            height: 45px !important;
+            height: 35px !important;
           }
           .status-badge {
-            padding: 0.5rem 1.5rem !important;
-            font-size: clamp(1rem, 5vw, 1.2rem) !important;
+            padding: 0.4rem 1.2rem !important;
+            font-size: clamp(0.9rem, 4vw, 1.1rem) !important;
           }
           .status-badge > div:last-child {
-             font-size: clamp(1.5rem, 6vw, 2rem) !important;
+             font-size: clamp(1.4rem, 5vw, 1.8rem) !important;
           }
           .top-controls-wrapper {
             top: 0.8rem !important;
@@ -492,26 +502,29 @@ function Monitor() {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '2.5rem 3.5rem',
+            padding: '1.5rem clamp(1.2rem, 2.5vw, 3rem)',
             boxSizing: 'border-box',
-            userSelect: isDragging ? 'none' : 'auto'
+            userSelect: isDragging ? 'none' : 'auto',
+            overflow: 'hidden'
           }}
         >
           {/* Left: Runner details (resizable) */}
           <div style={{
             flex: `0 0 ${leftRatio}%`,
             width: `${leftRatio}%`,
+            maxWidth: `${leftRatio}%`,
+            minWidth: 0,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '1rem',
+            padding: '0.8rem',
             boxSizing: 'border-box',
             animation: 'slideInLeft 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
           }}>
-            <div className="monitor-bib" style={{ fontSize: 'clamp(5.5rem, 9vw, 10rem)', margin: 0, lineHeight: 1 }}>{displayData.bib}</div>
-            <div className="monitor-name" style={{ fontSize: 'clamp(2.5rem, 4vw, 4rem)', margin: '1rem 0', textAlign: 'center', wordBreak: 'break-word' }}>{displayData.name}</div>
-            <div style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.5rem)', color: 'var(--text-muted)', marginBottom: '2rem', fontWeight: 500, textAlign: 'center' }}>{displayData.distance} • {displayData.ageGroup}</div>
+            <div className="monitor-bib" style={{ fontSize: 'clamp(4.5rem, 8vw, 9.5rem)', margin: 0, lineHeight: 1, width: '100%', textAlign: 'center', wordBreak: 'break-all' }}>{displayData.bib}</div>
+            <div className="monitor-name" style={{ fontSize: 'clamp(1.8rem, 3.2vw, 3.8rem)', margin: '0.8rem 0', textAlign: 'center', wordBreak: 'break-word', width: '100%' }}>{displayData.name}</div>
+            <div style={{ fontSize: 'clamp(1.1rem, 2vw, 2.2rem)', color: 'var(--text-muted)', marginBottom: '1.2rem', fontWeight: 500, textAlign: 'center' }}>{displayData.distance} • {displayData.ageGroup}</div>
             <div
               className="status-badge"
               style={{
@@ -519,13 +532,14 @@ function Monitor() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '0.6rem 2.4rem',
+                padding: '0.5rem clamp(1.2rem, 2vw, 2.2rem)',
                 borderRadius: '24px',
-                whiteSpace: 'nowrap'
+                maxWidth: '100%',
+                boxSizing: 'border-box'
               }}
             >
               <div style={{
-                fontSize: 'clamp(0.85rem, 1.2vw, 1.15rem)',
+                fontSize: 'clamp(0.75rem, 1vw, 1.1rem)',
                 fontWeight: 700,
                 letterSpacing: '1.5px',
                 textTransform: 'uppercase',
@@ -540,7 +554,7 @@ function Monitor() {
                 <span>{startInfo.date}</span>
               </div>
               <div style={{
-                fontSize: 'clamp(2.5rem, 4.2vw, 4.5rem)',
+                fontSize: 'clamp(2.2rem, 3.6vw, 4.2rem)',
                 fontWeight: 900,
                 letterSpacing: '2px',
                 lineHeight: 1.05,
@@ -562,7 +576,7 @@ function Monitor() {
             }}
             title="ลากซ้าย-ขวา เพื่อปรับขนาดสัดส่วน (ดับเบิ้ลคลิกเพื่อรีเซ็ต 38%)"
             style={{
-              width: '28px',
+              width: '24px',
               height: '85vh',
               display: 'flex',
               alignItems: 'center',
@@ -589,30 +603,36 @@ function Monitor() {
           </div>
 
           {/* Right: Map & Logos */}
-          {displayData.distance && (
+          {(displayData.distance || active) && (
             <div style={{
-              flex: `0 0 calc(${100 - leftRatio}% - 32px)`,
-              width: `calc(${100 - leftRatio}% - 32px)`,
+              flex: '1 1 0',
+              minWidth: 0,
+              width: '100%',
+              height: '100%',
+              maxHeight: '100%',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              height: '100vh',
-              padding: '2rem 0.5rem 2rem 0.5rem',
+              padding: '0.5rem',
               boxSizing: 'border-box',
               opacity: 0, // start invisible before animation
-              animation: 'slideUpMap 1s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards'
+              animation: 'slideUpMap 1s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards',
+              overflow: 'hidden'
             }}>
               <img
-                src={displayData.distance === '10KM' ? map10k : map5k}
-                alt={`${displayData.distance} Map`}
+                src={mapImage}
+                alt={`${displayData.distance || (is10k ? '10KM' : '5KM')} Map`}
                 style={{
-                  maxHeight: '75vh',
+                  maxHeight: 'min(68vh, calc(100% - 100px))',
                   maxWidth: '100%',
+                  width: 'auto',
+                  height: 'auto',
                   objectFit: 'contain',
-                  borderRadius: '24px',
-                  boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-                  border: '2px solid rgba(255,255,255,0.05)'
+                  borderRadius: '20px',
+                  boxShadow: '0 16px 40px rgba(0,0,0,0.45)',
+                  border: '2px solid rgba(255,255,255,0.08)',
+                  flexShrink: 1
                 }}
               />
 
@@ -621,30 +641,31 @@ function Monitor() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '4.5rem',
-                marginTop: '1.2rem',
-                padding: '0.8rem 4rem',
+                gap: 'clamp(1.2rem, 2.5vw, 3.5rem)',
+                marginTop: '0.9rem',
+                padding: '0.5rem clamp(1rem, 2.5vw, 3.5rem)',
                 backgroundColor: '#ffffff',
                 borderRadius: '16px',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
                 border: '1px solid rgba(0,0,0,0.06)',
                 maxWidth: '100%',
-                flexWrap: 'nowrap'
+                boxSizing: 'border-box',
+                flexShrink: 0
               }}>
                 <img
                   src={logoBaanPong}
                   alt="Logo Baan Pong"
-                  style={{ height: '60px', width: 'auto', objectFit: 'contain', borderRadius: '8px' }}
+                  style={{ height: 'clamp(32px, 3.8vw, 55px)', width: 'auto', objectFit: 'contain', borderRadius: '6px' }}
                 />
                 <img
                   src={logoMaekhaning}
                   alt="Logo Mae Khaning"
-                  style={{ height: '60px', width: 'auto', objectFit: 'contain', borderRadius: '8px' }}
+                  style={{ height: 'clamp(32px, 3.8vw, 55px)', width: 'auto', objectFit: 'contain', borderRadius: '6px' }}
                 />
                 <img
                   src={logoFull}
                   alt="Logo ROHN Full"
-                  style={{ height: '78px', width: 'auto', objectFit: 'contain' }}
+                  style={{ height: 'clamp(40px, 5vw, 70px)', width: 'auto', objectFit: 'contain' }}
                 />
               </div>
             </div>

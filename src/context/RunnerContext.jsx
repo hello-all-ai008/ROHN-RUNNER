@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, SUPABASE_URL } from '../lib/supabaseClient';
 import { CURRENT_EVENT_ID } from '../lib/constants';
 import { normalizeRunner } from '../lib/results';
 import { smartFindRunner, normalizeScannedBib } from '../lib/bibUtils';
@@ -70,7 +70,12 @@ export const RunnerProvider = ({ children }) => {
         setStations(data);
         return;
       }
-    } catch (e) {}
+      if (error) {
+        console.warn('[RunnerContext] Direct DB query for stations failed:', error.message);
+      }
+    } catch (e) {
+      console.warn('[RunnerContext] Error querying stations table:', e);
+    }
 
     // 2. Try edge function invoke via Supabase client (fallback)
     try {
@@ -92,11 +97,18 @@ export const RunnerProvider = ({ children }) => {
           return;
         }
       }
-    } catch (e) {}
+      if (error) {
+        console.warn('[RunnerContext] supabase.functions.invoke login-options failed:', error.message);
+      }
+    } catch (e) {
+      console.warn('[RunnerContext] Error invoking login-options function:', e);
+    }
 
     // 3. Direct fetch fallback
     try {
-      const res = await fetch(`https://kjtbfzsgnsvkfjgayuys.supabase.co/functions/v1/login-options?event_id=${CURRENT_EVENT_ID}`);
+      const baseUrl = SUPABASE_URL || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || 'https://kjtbfzsgnsvkfjgayuys.supabase.co';
+      const cleanUrl = baseUrl.replace(/\/+$/, '');
+      const res = await fetch(`${cleanUrl}/functions/v1/login-options?event_id=${encodeURIComponent(CURRENT_EVENT_ID)}`);
       if (res.ok) {
         const json = await res.json();
         if (json && Array.isArray(json.slots)) {
@@ -113,8 +125,14 @@ export const RunnerProvider = ({ children }) => {
             return;
           }
         }
+      } else {
+        console.warn('[RunnerContext] Direct fetch login-options failed with status:', res.status);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[RunnerContext] Error direct fetching login-options:', e);
+    }
+
+    console.warn('[RunnerContext] All station loading strategies failed. Falling back to DEFAULT_STATIONS.');
   }, []);
 
   const loadRunners = useCallback(async () => {
@@ -138,6 +156,7 @@ export const RunnerProvider = ({ children }) => {
       setRunners(actualRunners.map(normalizeRunner));
       setError(null);
     } catch (err) {
+      console.error('[RunnerContext] Error loading public runners:', err);
       setError(err instanceof Error ? err.message : 'Failed to load runners');
     } finally {
       setLoading(false);

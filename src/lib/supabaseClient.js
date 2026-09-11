@@ -52,3 +52,5 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     fetch: safeFetch
   }
 });
+
+export { SUPABASE_URL };

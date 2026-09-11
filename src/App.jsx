@@ -55,10 +55,89 @@ function PageGuard({ pageId, children }) {
   return children;
 }
 
+function GlobalErrorBanner() {
+  const { error, refetchRunners } = useRunner();
+  const [dismissed, setDismissed] = React.useState(false);
+
+  React.useEffect(() => {
+    if (error) setDismissed(false);
+  }, [error]);
+
+  if (!error || dismissed) return null;
+
+  return (
+    <div
+      role="alert"
+      style={{
+        backgroundColor: '#fef2f2',
+        borderBottom: '1px solid #fecaca',
+        padding: '10px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '12px',
+        color: '#991b1b',
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        position: 'sticky',
+        top: 0,
+        zIndex: 9999,
+        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+        <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>⚠️</span>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          เกิดข้อผิดพลาดในการโหลดข้อมูล: {error}
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        {refetchRunners && (
+          <button
+            type="button"
+            onClick={refetchRunners}
+            style={{
+              padding: '4px 12px',
+              borderRadius: '6px',
+              backgroundColor: '#dc2626',
+              color: '#ffffff',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              cursor: 'pointer'
+            }}
+          >
+            ลองใหม่
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#991b1b',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            lineHeight: 1,
+            padding: '2px 6px',
+            fontWeight: 700
+          }}
+          title="ปิดการแจ้งเตือน"
+          aria-label="ปิดการแจ้งเตือน"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
     <RunnerProvider>
       <Router>
+        <GlobalErrorBanner />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/scanner" element={<PageGuard pageId="scanner"><Scanner /></PageGuard>} />
