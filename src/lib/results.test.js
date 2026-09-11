@@ -13,7 +13,8 @@ import {
   computeRank,
   formatDuration,
   getRunnerRaceStatus,
-  checkpointTimeline
+  checkpointTimeline,
+  topNByGroup
 } from './results.js';
 
 test('isMale and isFemale gender parsing', () => {
@@ -124,6 +125,28 @@ test('checkpointTimeline builds ordered stations with Check in, Start, CPs, and 
   assert.equal(timeline[1].label, 'Start');
   assert.equal(timeline[2].label, 'A1');
   assert.equal(timeline[3].label, 'Finish');
+});
+
+test('getOverallLeaders passes cat_color through from the winning runner, falling back to null when unset', () => {
+  const colored = { bib: '2001', distance: '10KM', gender: 'M', gun_start_time: 1000, finish: 5000, cat_color: '#aa1ef6' };
+  const uncolored = { bib: '3001', distance: '21KM', gender: 'M', gun_start_time: 1000, finish: 5000 };
+
+  const { overallLeaders } = getOverallLeaders([colored, uncolored]);
+
+  const tenK = overallLeaders.find((l) => l.distance === '10KM');
+  const twentyOneK = overallLeaders.find((l) => l.distance === '21KM');
+
+  assert.equal(tenK.cat_color, '#aa1ef6');
+  assert.equal(twentyOneK.cat_color, null);
+});
+
+test('topNByGroup passes cat_color through from the group\'s runners', () => {
+  const r1 = { bib: '4001', distance: '10KM', age_group: '30-39', gender: 'M', gun_start_time: 1000, finish: 5000, cat_color: '#0891b2' };
+
+  const groups = topNByGroup([r1], 5);
+  const group = groups.find((g) => g.distance === '10KM' && g.age_group === '30-39' && g.gender === 'M');
+
+  assert.equal(group.cat_color, '#0891b2');
 });
 
 test('computeRank ranks finishers by Net Time ascending', () => {

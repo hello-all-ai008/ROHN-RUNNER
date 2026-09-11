@@ -85,6 +85,7 @@ function Monitor() {
     name: 'Runner Name',
     distance: '',
     ageGroup: '',
+    catColor: null,
     source: 'rohn_runner_scanner',
     gunStartTime: null,
     checkinTime: null,
@@ -163,6 +164,7 @@ function Monitor() {
         name: evt.name || runner?.name || 'Runner Name',
         distance: evt.distance || runner?.distance || '',
         ageGroup: evt.ageGroup || evt.age_group || runner?.ageGroup || '',
+        catColor: evt.cat_color || runner?.cat_color || null,
         source: isFromAdmin ? 'rohn_admin_checkin' : 'rohn_runner_scanner',
         gunStartTime: gunStartTime,
         checkinTime: checkinTime,
@@ -248,14 +250,16 @@ function Monitor() {
         source: 'rohn_runner_scanner',
         gunStartTime: gunStartTime,
         checkinTime: null,
-        isRealCheckin: false
+        isRealCheckin: false,
+        cat_color: runner.cat_color || null
       });
     } else {
       castToMonitor(monitorId, manualBib.trim(), 'NOT FOUND', '-', '-', {
         source: 'rohn_runner_scanner',
         gunStartTime: null,
         checkinTime: null,
-        isRealCheckin: false
+        isRealCheckin: false,
+        cat_color: null
       });
     }
     setManualBib('');
@@ -511,7 +515,25 @@ function Monitor() {
           }}>
             <div className="monitor-bib" style={{ fontSize: 'clamp(5.5rem, 9vw, 10rem)', margin: 0, lineHeight: 1 }}>{displayData.bib}</div>
             <div className="monitor-name" style={{ fontSize: 'clamp(2.5rem, 4vw, 4rem)', margin: '1rem 0', textAlign: 'center', wordBreak: 'break-word' }}>{displayData.name}</div>
-            <div style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.5rem)', color: 'var(--text-muted)', marginBottom: '2rem', fontWeight: 500, textAlign: 'center' }}>{displayData.distance} • {displayData.ageGroup}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '2rem' }}>
+              {displayData.distance && (
+                <span style={{
+                  background: displayData.catColor || '#0f172a',
+                  color: '#ffffff',
+                  padding: 'clamp(0.2rem, 0.6vw, 0.4rem) clamp(0.8rem, 2vw, 1.4rem)',
+                  borderRadius: '99px',
+                  fontSize: 'clamp(1.2rem, 2.2vw, 2rem)',
+                  fontWeight: 800,
+                  letterSpacing: '0.5px'
+                }}>
+                  {displayData.distance}
+                </span>
+              )}
+              {displayData.distance && displayData.ageGroup && (
+                <span style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.5rem)', color: 'var(--text-muted)', opacity: 0.5 }}>•</span>
+              )}
+              <span style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.5rem)', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'center' }}>{displayData.ageGroup}</span>
+            </div>
             <div
               className="status-badge"
               style={{

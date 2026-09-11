@@ -260,7 +260,7 @@ function Leaderboard() {
               {filteredOverall.map((item) => (
                 <div key={item.distance} className="overall-item-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ background: '#0f172a', color: '#ffffff', padding: '3px 12px', borderRadius: '99px', fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.5px' }}>
+                    <span style={{ background: item.cat_color || '#0f172a', color: '#ffffff', padding: '3px 12px', borderRadius: '99px', fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.5px' }}>
                       {item.distance}
                     </span>
                     <span style={{ fontSize: '0.78rem', color: '#78716c', fontWeight: 600 }}>
@@ -361,8 +361,8 @@ function Leaderboard() {
       <div className="groups-grid">
         {filteredGroups.map((group, gIdx) => (
           <div key={`${group.distance}_${group.age_group}_${group.gender}_${gIdx}`}>
-            <div style={{ fontSize: '1.05rem', color: 'var(--text-main)', marginBottom: '0.75rem', borderLeft: '4px solid var(--accent-blue)', paddingLeft: '0.6rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ color: 'var(--accent-blue)' }}>{group.distance}</span>
+            <div style={{ fontSize: '1.05rem', color: 'var(--text-main)', marginBottom: '0.75rem', borderLeft: `4px solid ${group.cat_color || 'var(--accent-blue)'}`, paddingLeft: '0.6rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <span style={{ color: group.cat_color || 'var(--accent-blue)' }}>{group.distance}</span>
               <span style={{ color: 'var(--text-muted)', opacity: 0.5 }}>|</span>
               <span>{formatEnglishLabel(group.age_group)}</span>
               <span style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: '0.9em' }}>({formatEnglishLabel(group.gender)})</span>

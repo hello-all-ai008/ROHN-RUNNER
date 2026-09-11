@@ -201,6 +201,7 @@ export function getOverallLeaders(allRunners) {
       distance: dist,
       male: male1,
       female: female1,
+      cat_color: male1?.cat_color ?? female1?.cat_color ?? null,
     });
   });
 
@@ -287,7 +288,7 @@ export function topNByGroup(allRunners, n = 5, excludeBibs = new Set()) {
     .forEach((r) => {
       const key = groupKey(r);
       if (!groups.has(key)) {
-        groups.set(key, { distance: r.distance, age_group: r.age_group, gender: r.gender, runners: [] });
+        groups.set(key, { distance: r.distance, age_group: r.age_group, gender: r.gender, cat_color: r.cat_color, runners: [] });
       }
       groups.get(key).runners.push(r);
     });
