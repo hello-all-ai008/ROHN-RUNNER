@@ -10,6 +10,26 @@ function Scanner() {
   const [monitorId, setMonitorId] = useState('1');
   const [message, setMessage] = useState({ text: '', type: '' });
   
+  const [autoRouteEnabled, setAutoRouteEnabled] = useState(() => {
+    return localStorage.getItem('rohn_auto_route_enabled') === 'true';
+  });
+  const [routingRules, setRoutingRules] = useState(() => {
+    try {
+      const stored = localStorage.getItem('rohn_routing_rules');
+      return stored ? JSON.parse(stored) : [{ distance: '10KM', monitorId: '1' }, { distance: '5KM', monitorId: '2' }];
+    } catch {
+      return [{ distance: '10KM', monitorId: '1' }, { distance: '5KM', monitorId: '2' }];
+    }
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('rohn_auto_route_enabled', autoRouteEnabled);
+  }, [autoRouteEnabled]);
+
+  React.useEffect(() => {
+    localStorage.setItem('rohn_routing_rules', JSON.stringify(routingRules));
+  }, [routingRules]);
+
   const { checkInRunner, castToMonitor } = useRunner();
 
   const handleCheckIn = (scannedBib = null) => {
@@ -31,7 +51,21 @@ function Scanner() {
         }
       }
 
-      castToMonitor(monitorId, officialBib, result.name, result.distance, result.ageGroup, {
+      let targetMonitorId = monitorId;
+
+      if (autoRouteEnabled && result.distance) {
+        const cleanDist = result.distance.toUpperCase().replace(/\s+/g, '');
+        const rule = routingRules.find(r => {
+           if (!r.distance) return false;
+           const ruleDist = r.distance.toUpperCase().replace(/\s+/g, '');
+           return cleanDist.includes(ruleDist) || ruleDist.includes(cleanDist);
+        });
+        if (rule) {
+          targetMonitorId = rule.monitorId;
+        }
+      }
+
+      castToMonitor(targetMonitorId, officialBib, result.name, result.distance, result.ageGroup, {
         source: 'rohn_runner_scanner',
         gunStartTime: result.gunStartTime,
         cat_color: result.cat_color
@@ -44,7 +78,7 @@ function Scanner() {
         distance: result.distance, 
         ageGroup: result.ageGroup, 
         startTime: startTimeStr,
-        monitorId: monitorId 
+        monitorId: targetMonitorId 
       });
       if (typeof scannedBib !== 'string') setBib('');
     } else {
@@ -66,7 +100,11 @@ function Scanner() {
           <ScannerInput 
             onScan={handleCheckIn} 
             monitorId={monitorId} 
-            setMonitorId={setMonitorId} 
+            setMonitorId={setMonitorId}
+            autoRouteEnabled={autoRouteEnabled}
+            setAutoRouteEnabled={setAutoRouteEnabled}
+            routingRules={routingRules}
+            setRoutingRules={setRoutingRules}
           />
 
           {message.type === 'error' && (

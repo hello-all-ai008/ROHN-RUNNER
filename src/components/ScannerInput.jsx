@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
-export default function ScannerInput({ onScan, monitorId, setMonitorId }) {
+export default function ScannerInput({ onScan, monitorId, setMonitorId, autoRouteEnabled, setAutoRouteEnabled, routingRules, setRoutingRules }) {
   const [bibInput, setBibInput] = useState('');
 
   // Camera State
@@ -427,7 +427,8 @@ export default function ScannerInput({ onScan, monitorId, setMonitorId }) {
 
       {/* ── Advanced Settings Panel ── */}
       {showControls && (
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', flexWrap: 'wrap', paddingBottom: '12px', paddingTop: '8px', borderBottom: '1px dashed var(--border-color)', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '12px', paddingTop: '8px', borderBottom: '1px dashed var(--border-color)', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', flexWrap: 'wrap' }}>
           {setMonitorId && (
             <select
               value={monitorId}
@@ -462,6 +463,71 @@ export default function ScannerInput({ onScan, monitorId, setMonitorId }) {
             >
               <RefreshCcw size={18} />
             </button>
+          )}
+          </div>
+
+          {/* Auto-Route Settings */}
+          {setAutoRouteEnabled && (
+            <div style={{ background: 'var(--bg-soft)', borderRadius: '10px', padding: '12px', border: '1px solid var(--line)' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', marginBottom: autoRouteEnabled ? '12px' : '0' }}>
+                <input 
+                  type="checkbox" 
+                  checked={autoRouteEnabled} 
+                  onChange={e => setAutoRouteEnabled(e.target.checked)} 
+                  style={{ width: '18px', height: '18px' }} 
+                />
+                เปิดระบบส่งรายชื่อเข้าจออัตโนมัติตามระยะ (Auto-Route)
+              </label>
+              
+              {autoRouteEnabled && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {routingRules.map((rule, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <input 
+                        type="text" 
+                        placeholder="เช่น 10KM" 
+                        value={rule.distance} 
+                        onChange={e => {
+                          const newRules = [...routingRules]; 
+                          newRules[idx].distance = e.target.value; 
+                          setRoutingRules(newRules);
+                        }} 
+                        style={{ flex: 1, height: '36px', padding: '0 10px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '13px' }} 
+                      />
+                      <span style={{ fontSize: '12px', color: 'var(--ink-2)' }}>=&gt;</span>
+                      <select 
+                        value={rule.monitorId} 
+                        onChange={e => {
+                          const newRules = [...routingRules]; 
+                          newRules[idx].monitorId = e.target.value; 
+                          setRoutingRules(newRules);
+                        }} 
+                        style={{ width: '100px', height: '36px', padding: '0 8px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '13px' }}
+                      >
+                        <option value="1">จอ 1</option>
+                        <option value="2">จอ 2</option>
+                        <option value="3">จอ 3</option>
+                        <option value="4">จอ 4</option>
+                        <option value="5">จอ 5</option>
+                      </select>
+                      <button 
+                        onClick={() => {
+                          const newRules = routingRules.filter((_, i) => i !== idx); 
+                          setRoutingRules(newRules);
+                        }} 
+                        style={{ background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', width: '36px', height: '36px', cursor: 'pointer', fontWeight: 'bold', flexShrink: 0 }}
+                      >X</button>
+                    </div>
+                  ))}
+                  <button 
+                    onClick={() => setRoutingRules([...routingRules, { distance: '', monitorId: '1' }])} 
+                    style={{ background: '#f1f5f9', border: '1px dashed #cbd5e1', color: '#475569', borderRadius: '8px', height: '36px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginTop: '4px' }}
+                  >
+                    + เพิ่มเงื่อนไขระยะ
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

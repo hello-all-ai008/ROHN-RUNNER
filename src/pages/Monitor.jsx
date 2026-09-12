@@ -341,7 +341,7 @@ function Monitor() {
             margin-top: 0.5rem !important;
           }
           .monitor-logos img {
-            height: 35px !important;
+            height: 50px !important;
           }
           .status-badge {
             padding: 0.4rem 1.2rem !important;
@@ -711,17 +711,17 @@ function Monitor() {
                 <img
                   src={logoBaanPong}
                   alt="Logo Baan Pong"
-                  style={{ height: 'clamp(32px, 3.8vw, 55px)', width: 'auto', objectFit: 'contain', borderRadius: '6px' }}
+                  style={{ height: 'clamp(45px, 5vw, 75px)', width: 'auto', objectFit: 'contain', borderRadius: '6px' }}
                 />
                 <img
                   src={logoMaekhaning}
                   alt="Logo Mae Khaning"
-                  style={{ height: 'clamp(32px, 3.8vw, 55px)', width: 'auto', objectFit: 'contain', borderRadius: '6px' }}
+                  style={{ height: 'clamp(45px, 5vw, 75px)', width: 'auto', objectFit: 'contain', borderRadius: '6px' }}
                 />
                 <img
                   src={logoFull}
                   alt="Logo ROHN Full"
-                  style={{ height: 'clamp(40px, 5vw, 70px)', width: 'auto', objectFit: 'contain' }}
+                  style={{ height: 'clamp(55px, 6.5vw, 95px)', width: 'auto', objectFit: 'contain' }}
                 />
               </div>
             </div>
