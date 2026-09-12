@@ -92,7 +92,8 @@ function Monitor() {
     checkinTime: null,
     finishTime: null,
     finishAt: null,
-    isRealCheckin: false
+    isRealCheckin: false,
+    timestamp: Date.now()
   });
   const [manualBib, setManualBib] = useState('');
   const [showControls, setShowControls] = useState(false);
@@ -174,7 +175,8 @@ function Monitor() {
         checkinTime: checkinTime,
         finishTime: isAdminFinish ? (evt.finishTime || null) : null,
         finishAt: isAdminFinish ? (evt.finishAt || null) : null,
-        isRealCheckin: isFromAdmin
+        isRealCheckin: isFromAdmin,
+        timestamp: evt.timestamp || Date.now()
       });
       setActive(true);
     }
@@ -505,7 +507,7 @@ function Monitor() {
 
       {active && (
         <div
-          key={castEvent?.timestamp || 'initial'}
+          key={displayData.timestamp || 'initial'}
           className="monitor-container"
           id="activeState"
           style={{
