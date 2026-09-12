@@ -172,6 +172,18 @@
   font-style: italic;
   line-height: 1.2;
 }
+.eslip-foot-url {
+  font-size: 8.5px;
+  color: var(--ink-2, #64748b);
+  font-family: var(--mono, monospace);
+  font-weight: 600;
+  text-align: center;
+  word-break: break-all;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--line, #e2e8f0);
+  width: 100%;
+}
 
 /* Responsive styling specifically optimized for mobile phones (width <= 480px) */
 @media screen and (max-width: 480px) {
@@ -327,10 +339,10 @@
   }
 }
 
-/* Print styles - calibrated for Thermal Slip Printers (80mm width) and exact 15cm (150mm) paper length */
+/* Print styles - calibrated for Thermal Slip Printers (80mm width) fitting natural content height */
 @media print {
   @page {
-    size: 80mm 150mm; /* Exactly 80mm width and 150mm (15cm) length */
+    size: 80mm auto; /* Automatically fit the exact height of the slip */
     margin: 0mm; /* 0 margin prevents blank header/footer and extra feed */
   }
 
@@ -339,13 +351,13 @@
     padding: 0 !important;
     width: 80mm !important;
     max-width: 80mm !important;
-    height: 150mm !important;
-    max-height: 150mm !important;
-    min-height: 150mm !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
     background: #ffffff !important;
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
-    overflow: hidden !important; /* CRITICAL: prevents accidental 2nd sheet from printer drivers */
+    overflow: visible !important; /* CRITICAL: prevents accidental 2nd sheet from printer drivers */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -357,60 +369,56 @@
     display: none !important;
   }
 
-  /* Modal backdrop becomes transparent and statically centered */
+  /* Modal backdrop becomes transparent and statically positioned */
   .modal-bg.eslip-modal-portal {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: block !important;
     position: static !important;
     width: 80mm !important;
     max-width: 80mm !important;
-    height: 150mm !important;
-    max-height: 150mm !important;
-    min-height: 150mm !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
   }
 
   .modal-bg.eslip-modal-portal > div {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: block !important;
     margin: 0 auto !important;
     padding: 0 !important;
     transform: none !important;
     width: 76mm !important;
     max-width: 76mm !important;
-    height: 147mm !important;
-    max-height: 147mm !important;
-    min-height: 147mm !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
   }
 
-  /* The slip itself: calibrated to 14.7cm to fit 15cm paper cleanly with even spacing and no giant voids */
+  /* The slip itself: height fits content naturally with 1.5px solid border */
   .eslip {
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important;
     position: relative !important; /* CRITICAL: locks Printed date inside this frame */
     width: 76mm !important;
     max-width: 76mm !important;
-    height: 147mm !important; /* 14.7cm height inside 15cm paper */
-    max-height: 147mm !important;
-    min-height: 147mm !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
     margin: 0 auto !important;
-    padding: 3mm 3.5mm 3mm !important;
+    padding: 3mm 3.5mm !important;
     box-shadow: none !important;
     border: 1.5px solid #000000 !important;
     border-radius: 4px !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     box-sizing: border-box !important;
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
@@ -641,5 +649,19 @@
     font-weight: 600 !important;
     font-style: normal !important;
     line-height: 1 !important;
+  }
+
+  .eslip-foot-url {
+    font-size: 8px !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    font-weight: 700 !important;
+    font-family: var(--mono, monospace) !important;
+    border-top: 1.2px dashed #000000 !important;
+    margin-top: 2.5px !important;
+    padding-top: 2.5px !important;
+    width: 100% !important;
+    text-align: center !important;
+    word-break: break-all !important;
   }
 }

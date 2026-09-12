@@ -22,6 +22,15 @@ export default function ESlipModal({ runner, overallRank, catRank, stations = []
 
   if (!runner) return null;
 
+  const handlePrint = () => {
+    const prevTitle = document.title;
+    document.title = '';
+    window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 1000);
+  };
+
   const modalContent = (
     <div 
       className="modal-bg open eslip-modal-portal" 
@@ -64,16 +73,16 @@ export default function ESlipModal({ runner, overallRank, catRank, stations = []
               flex: 1, 
               padding: '12px', 
               borderRadius: '10px', 
+              background: '#334155', 
+              color: '#ffffff', 
               fontSize: '14px', 
-              fontWeight: 600,
-              backgroundColor: '#334155',
-              color: '#ffffff',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
+              fontWeight: 600, 
+              border: 'none', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '6px', 
               transition: 'background-color 0.2s'
             }} 
             onClick={onClose}
@@ -91,15 +100,15 @@ export default function ESlipModal({ runner, overallRank, catRank, stations = []
               fontSize: '14px', 
               fontWeight: 600, 
               border: 'none', 
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '6px', 
               boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
               transition: 'transform 0.2s'
             }} 
-            onClick={() => window.print()}
+            onClick={handlePrint}
           >
             <Printer size={18} /> พิมพ์ (Print)
           </button>
