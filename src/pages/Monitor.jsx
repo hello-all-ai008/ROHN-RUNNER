@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
 import { supabase } from '../lib/supabaseClient';
 import { computeRunnerRanks } from '../components/ESlip.jsx';
+import { isMale, isFemale } from '../lib/results';
 import logoFull from '../LOGO/logo-rohn-full.png';
 import logoBaanPong from '../LOGO/logo-BaanPong.jpg';
 import logoMaekhaning from '../LOGO/logo-maekhaning.jpg';
@@ -553,24 +554,28 @@ function Monitor() {
               textShadow: displayData.catColor ? `0 0 40px ${displayData.catColor}66` : undefined
             }}>{displayData.bib}</div>
             <div className="monitor-name" style={{ fontSize: 'clamp(1.8rem, 3.2vw, 3.8rem)', margin: '0.8rem 0', textAlign: 'center', wordBreak: 'break-word', width: '100%' }}>{displayData.name}</div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '1.2rem', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '1.2rem', width: '100%' }}>
               {displayData.distance && (
                 <span style={{
                   background: displayData.catColor || '#0f172a',
                   color: '#ffffff',
-                  padding: 'clamp(0.15rem, 0.5vw, 0.35rem) clamp(0.7rem, 1.7vw, 1.2rem)',
+                  padding: 'clamp(0.2rem, 0.6vw, 0.5rem) clamp(1rem, 2vw, 1.5rem)',
                   borderRadius: '99px',
-                  fontSize: 'clamp(1rem, 1.9vw, 1.7rem)',
+                  fontSize: 'clamp(1.8rem, 3.2vw, 3.8rem)',
                   fontWeight: 800,
                   letterSpacing: '0.5px'
                 }}>
                   {displayData.distance}{displayRunner?.cat_name ? ` : ${displayRunner.cat_name}` : ''}
                 </span>
               )}
-              {displayData.distance && displayData.ageGroup && (
-                <span style={{ fontSize: 'clamp(1.3rem, 2.1vw, 2.1rem)', color: 'var(--text-muted)', opacity: 0.5 }}>•</span>
+              {displayRunner?.gender && (
+                <span style={{ fontSize: 'clamp(1.8rem, 3.2vw, 3.8rem)', color: 'var(--text-muted)', fontWeight: 600, textAlign: 'center', marginTop: '0.2rem' }}>
+                  {isMale(displayRunner.gender) ? 'Male' : (isFemale(displayRunner.gender) ? 'Female' : displayRunner.gender)}
+                </span>
               )}
-              <span style={{ fontSize: 'clamp(1.3rem, 2.1vw, 2.1rem)', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'center' }}>{displayData.ageGroup}</span>
+              {displayData.ageGroup && (
+                <span style={{ fontSize: 'clamp(1.8rem, 3.2vw, 3.8rem)', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'center' }}>{displayData.ageGroup}</span>
+              )}
             </div>
             <div
               className="status-badge"
