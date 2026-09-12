@@ -193,7 +193,7 @@ function Monitor() {
     try {
       const evt = JSON.parse(saved);
       applyEvent(evt);
-    } catch {}
+    } catch { }
   }, [applyEvent]);
 
   // React to live castEvent updates from context.
@@ -206,7 +206,7 @@ function Monitor() {
     try {
       localStorage.removeItem('rohn_monitor_cast');
       localStorage.removeItem('react_cast_event');
-    } catch {}
+    } catch { }
   };
 
   // Subscribe to realtime transports. Must NOT depend on castEvent, or the
@@ -338,12 +338,13 @@ function Monitor() {
             width: auto !important;
           }
           .monitor-logos {
-            gap: 1rem !important;
-            padding: 0.4rem 1rem !important;
-            margin-top: 0.5rem !important;
+            gap: 0.5rem !important;
+            padding: 0.6rem 0.5rem !important;
+            margin-top: 1rem !important;
+            justify-content: space-around !important;
           }
           .monitor-logos img {
-            height: 50px !important;
+            height: 60px !important;
           }
           .status-badge {
             padding: 0.4rem 1.2rem !important;
@@ -673,58 +674,60 @@ function Monitor() {
               justifyContent: 'center',
               alignItems: 'center',
               padding: '0.5rem',
+              paddingTop: '5rem', /* Add top padding to prevent overlap with Settings button */
               boxSizing: 'border-box',
               opacity: 0, // start invisible before animation
               animation: 'slideUpMap 1s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards',
               overflow: 'hidden'
             }}>
-              <img
-                src={mapImage}
-                alt={`${displayData.distance || (is10k ? '10KM' : '5KM')} Map`}
-                style={{
-                  maxHeight: 'min(68vh, calc(100% - 100px))',
-                  maxWidth: '100%',
-                  width: 'auto',
-                  height: 'auto',
-                  objectFit: 'contain',
-                  borderRadius: '20px',
-                  boxShadow: '0 16px 40px rgba(0,0,0,0.45)',
-                  border: '2px solid rgba(255,255,255,0.08)',
-                  flexShrink: 1
-                }}
-              />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', maxWidth: '100%' }}>
+                <img
+                  src={mapImage}
+                  alt={`${displayData.distance || (is10k ? '10KM' : '5KM')} Map`}
+                  style={{
+                    maxHeight: 'min(68vh, calc(100% - 100px))',
+                    maxWidth: '100%',
+                    width: 'auto',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    borderRadius: '20px',
+                    boxShadow: '0 16px 40px rgba(0,0,0,0.45)',
+                    border: '2px solid rgba(255,255,255,0.08)',
+                    flexShrink: 1,
+                    alignSelf: 'center'
+                  }}
+                />
 
-              {/* Logos under map: logo-baanpong, logo-maekhaning, logo-rohn-full */}
-              <div className="monitor-logos" style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 'clamp(1.2rem, 2.5vw, 3.5rem)',
-                marginTop: '0.9rem',
-                padding: '0.5rem clamp(1rem, 2.5vw, 3.5rem)',
-                backgroundColor: '#ffffff',
-                borderRadius: '16px',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                border: '1px solid rgba(0,0,0,0.06)',
-                maxWidth: '100%',
-                boxSizing: 'border-box',
-                flexShrink: 0
-              }}>
-                <img
-                  src={logoBaanPong}
-                  alt="Logo Baan Pong"
-                  style={{ height: 'clamp(45px, 5vw, 75px)', width: 'auto', objectFit: 'contain', borderRadius: '6px' }}
-                />
-                <img
-                  src={logoMaekhaning}
-                  alt="Logo Mae Khaning"
-                  style={{ height: 'clamp(45px, 5vw, 75px)', width: 'auto', objectFit: 'contain', borderRadius: '6px' }}
-                />
-                <img
-                  src={logoFull}
-                  alt="Logo ROHN Full"
-                  style={{ height: 'clamp(55px, 6.5vw, 95px)', width: 'auto', objectFit: 'contain' }}
-                />
+                {/* Logos under map: logo-baanpong, logo-maekhaning, logo-rohn-full */}
+                <div className="monitor-logos" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-around',
+                  marginTop: '1rem',
+                  padding: '1rem clamp(1rem, 2vw, 2rem)',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '16px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  boxSizing: 'border-box',
+                  flexShrink: 0
+                }}>
+                  <img
+                    src={logoBaanPong}
+                    alt="Logo Baan Pong"
+                    style={{ height: 'clamp(55px, 6vw, 90px)', width: 'auto', objectFit: 'contain', borderRadius: '6px' }}
+                  />
+                  <img
+                    src={logoMaekhaning}
+                    alt="Logo Mae Khaning"
+                    style={{ height: 'clamp(55px, 6vw, 90px)', width: 'auto', objectFit: 'contain', borderRadius: '6px' }}
+                  />
+                  <img
+                    src={logoFull}
+                    alt="Logo ROHN Full"
+                    style={{ height: 'clamp(65px, 7.5vw, 110px)', width: 'auto', objectFit: 'contain' }}
+                  />
+                </div>
               </div>
             </div>
           )}
