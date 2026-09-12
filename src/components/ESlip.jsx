@@ -244,9 +244,9 @@ export function computeRunnerRanks(targetRunner, allRunners = []) {
     if (idx !== -1) catRank = idx + 1;
   }
 
-  return { 
-    overallRank: overallRank != null && overallRank !== '—' ? String(overallRank) : '—', 
-    catRank: catRank != null && catRank !== '—' ? String(catRank) : '—' 
+  return {
+    overallRank: overallRank != null && overallRank !== '—' ? String(overallRank) : '—',
+    catRank: catRank != null && catRank !== '—' ? String(catRank) : '—'
   };
 }
 
@@ -331,7 +331,7 @@ export default function ESlip({ runner, overallRank, catRank, stations = [], run
   try {
     const runnerCtx = useRunner();
     runnerContextRunners = runnerCtx?.runners || [];
-  } catch (e) {}
+  } catch (e) { }
   const allRunners = propRunners && propRunners.length > 0 ? propRunners : runnerContextRunners;
 
   let cleanOverall = (overallRank != null && overallRank !== '' && overallRank !== '-' && overallRank !== '—')
@@ -461,10 +461,10 @@ export default function ESlip({ runner, overallRank, catRank, stations = [], run
               {runner.gun_start_time
                 ? fmtDate(runner.gun_start_time)
                 : (runner.start_date
-                    ? fmtDate(runner.start_date)
-                    : (cpEntries.length > 0
-                        ? fmtDate(cpEntries[0][1])
-                        : (runner.checked_in_at ? fmtDate(runner.checked_in_at) : fmtDate(Date.now()))))}
+                  ? fmtDate(runner.start_date)
+                  : (cpEntries.length > 0
+                    ? fmtDate(cpEntries[0][1])
+                    : (runner.checked_in_at ? fmtDate(runner.checked_in_at) : fmtDate(Date.now()))))}
             </div>
           </div>
           <div className="eslip-stat-box" style={{ background: '#f8fafc', padding: '10px', borderRadius: '10px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
@@ -505,13 +505,8 @@ export default function ESlip({ runner, overallRank, catRank, stations = [], run
           />
         </div>
         <div className="eslip-foot-timing" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-          <span>Timing System by</span>
-          <img 
-            src={logoRohnLabel} 
-            alt="ROHN" 
-            className="eslip-foot-logo-label"
-            style={{ height: '32px', width: 'auto', objectFit: 'contain' }} 
-          />
+          <span>Timing System by ROHN</span>
+
         </div>
         <span className="eslip-foot-note" style={{ fontSize: '10px', color: '#64748b', fontStyle: 'italic' }}>* Provisional Result ( Subject to change)</span>
       </div>
