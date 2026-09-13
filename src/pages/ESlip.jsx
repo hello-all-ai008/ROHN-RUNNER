@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useRunner } from '../context/RunnerContext';
 import { ArrowLeft, Search, Medal, Timer, Map, User, Users, Printer, Trophy } from 'lucide-react';
 import logoFull from '../LOGO/logo-rohn-full.png';
-import { formatTime, checkpointTimeline } from '../lib/results';
+import { formatTime, checkpointTimeline, getRunnerNetTime, formatDuration } from '../lib/results';
 import { normalizeScannedBib } from '../lib/bibUtils';
 import ESlipModal from '../components/ESlipModal';
 import { computeRunnerRanks, formatEnglishLabel } from '../components/ESlip';
@@ -25,6 +25,8 @@ function ESlip() {
     return computeRunnerRanks(runner, runners);
   }, [runner, runners]);
   const officialTime = runner ? formatTime(runner.finish) : null;
+  const netInfo = useMemo(() => runner ? getRunnerNetTime(runner) : { netTimeMs: null }, [runner]);
+  const netTimeStr = netInfo.netTimeMs != null ? formatDuration(netInfo.netTimeMs) : null;
   const timeline = useMemo(() => {
     return runner ? checkpointTimeline(runner.cps, runner.finish, runner.checked_in_at, runner.gun_start_time, stations) : [];
   }, [runner, stations]);
@@ -206,6 +208,13 @@ function ESlip() {
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>Official Time</div>
                     <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{officialTime || 'ยังไม่เข้าเส้นชัย / Not finished yet'}</div>
+                  </div>
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ background: 'rgba(157,51,214,0.2)', padding: '0.5rem', borderRadius: '10px' }}><Timer size={18} color="#93c5fd" /></div>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>Net Time</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#93c5fd' }}>{netTimeStr || '—'}</div>
                   </div>
                 </div>
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
