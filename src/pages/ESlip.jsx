@@ -21,7 +21,7 @@ function ESlip() {
   }, [bib]);
 
   const runner = bib ? getRunnerByBib(bib) : null;
-  const { overallRank, catRank: rank } = useMemo(() => {
+  const { overallRank, catRank: rank, overallDisplay, catDisplay } = useMemo(() => {
     return computeRunnerRanks(runner, runners);
   }, [runner, runners]);
   const officialTime = runner ? formatTime(runner.finish) : null;
@@ -212,14 +212,14 @@ function ESlip() {
                   <div style={{ background: 'rgba(157,51,214,0.2)', padding: '0.5rem', borderRadius: '10px' }}><Trophy size={18} color="#d8b4fe" /></div>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>Overall Rank</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{overallRank && overallRank !== '—' ? `#${overallRank}` : '-'}</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{overallDisplay && overallDisplay !== '—' ? overallDisplay : '-'}</div>
                   </div>
                 </div>
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div style={{ background: 'rgba(157,51,214,0.2)', padding: '0.5rem', borderRadius: '10px' }}><Medal size={18} color="#d8b4fe" /></div>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>Group Rank</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{rank && rank !== '—' ? `#${rank}` : '-'}</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{catDisplay && catDisplay !== '—' ? catDisplay : '-'}</div>
                   </div>
                 </div>
               </div>

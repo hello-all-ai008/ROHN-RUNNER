@@ -148,6 +148,14 @@ function Dashboard() {
             <p style={{ color: 'var(--text-muted)', margin: 0, marginTop: '2px', fontSize: '0.8rem' }}>Live Statistics</p>
           </div>
         </div>
+        <Link to="/summary" style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          padding: '8px 16px', borderRadius: '8px',
+          backgroundColor: '#2563eb', color: '#fff', textDecoration: 'none',
+          fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(37,99,235,0.2)'
+        }}>
+          📊 Graphical Report
+        </Link>
       </div>
 
       {loading && totalCount === 0 && (

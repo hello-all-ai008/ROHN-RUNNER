@@ -8,6 +8,7 @@ import Monitor from './pages/Monitor';
 import ESlip from './pages/ESlip';
 import Dashboard from './pages/Dashboard';
 import Leaderboard from './pages/Leaderboard';
+import SummaryReport from './pages/SummaryReport';
 
 function PageGuard({ pageId, children }) {
   const { pageConfig } = useRunner();
@@ -146,6 +147,7 @@ function App() {
           <Route path="/eslip/:bib" element={<PageGuard pageId="eslip"><ESlip /></PageGuard>} />
           <Route path="/dashboard" element={<PageGuard pageId="dashboard"><Dashboard /></PageGuard>} />
           <Route path="/leaderboard" element={<PageGuard pageId="leaderboard"><Leaderboard /></PageGuard>} />
+          <Route path="/summary" element={<PageGuard pageId="summary"><SummaryReport /></PageGuard>} />
         </Routes>
       </Router>
     </RunnerProvider>
