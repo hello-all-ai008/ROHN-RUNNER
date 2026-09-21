@@ -9,7 +9,6 @@ import ESlip from './pages/ESlip';
 import Dashboard from './pages/Dashboard';
 import Leaderboard from './pages/Leaderboard';
 import SummaryReport from './pages/SummaryReport';
-import ESlipPrintStation from './pages/ESlipPrintStation';
 
 function PageGuard({ pageId, children }) {
   const { pageConfig } = useRunner();
@@ -149,8 +148,6 @@ function App() {
           <Route path="/dashboard" element={<PageGuard pageId="dashboard"><Dashboard /></PageGuard>} />
           <Route path="/leaderboard" element={<PageGuard pageId="leaderboard"><Leaderboard /></PageGuard>} />
           <Route path="/summary" element={<PageGuard pageId="summary"><SummaryReport /></PageGuard>} />
-          <Route path="/summary/eslip-print" element={<PageGuard pageId="summary"><ESlipPrintStation /></PageGuard>} />
-          <Route path="/eslip-print" element={<PageGuard pageId="summary"><ESlipPrintStation /></PageGuard>} />
         </Routes>
       </Router>
     </RunnerProvider>

@@ -108,20 +108,7 @@ function SummaryReport() {
         <Link to="/dashboard" className="btn-back" style={{ marginBottom: 0 }}>
           <ArrowLeft size={18} /> กลับหน้า Dashboard
         </Link>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <Link 
-            to="/summary/eslip-print"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '8px 16px', borderRadius: '8px',
-              backgroundColor: '#10b981', color: '#fff',
-              textDecoration: 'none', fontWeight: 600,
-              boxShadow: '0 2px 4px rgba(16,185,129,0.25)'
-            }}
-          >
-            <Printer size={18} />
-            จุดพิมพ์ใบ E-Slip (Print Station)
-          </Link>
+        <div style={{ display: 'flex', gap: '10px' }}>
           <button 
             onClick={() => handlePrint('portrait')}
             style={{

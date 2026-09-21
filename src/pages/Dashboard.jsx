@@ -148,24 +148,14 @@ function Dashboard() {
             <p style={{ color: 'var(--text-muted)', margin: 0, marginTop: '2px', fontSize: '0.8rem' }}>Live Statistics</p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <Link to="/summary/eslip-print" style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '8px 14px', borderRadius: '8px',
-            backgroundColor: '#10b981', color: '#fff', textDecoration: 'none',
-            fontWeight: 600, fontSize: '0.85rem', boxShadow: '0 2px 4px rgba(16,185,129,0.2)'
-          }}>
-            🖨️ จุดพิมพ์ E-Slip
-          </Link>
-          <Link to="/summary" style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '8px 14px', borderRadius: '8px',
-            backgroundColor: '#2563eb', color: '#fff', textDecoration: 'none',
-            fontWeight: 600, fontSize: '0.85rem', boxShadow: '0 2px 4px rgba(37,99,235,0.2)'
-          }}>
-            📊 Graphical Report
-          </Link>
-        </div>
+        <Link to="/summary" style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          padding: '8px 16px', borderRadius: '8px',
+          backgroundColor: '#2563eb', color: '#fff', textDecoration: 'none',
+          fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(37,99,235,0.2)'
+        }}>
+          📊 Graphical Report
+        </Link>
       </div>
 
       {loading && totalCount === 0 && (
