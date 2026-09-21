@@ -5,6 +5,18 @@ import logoBaanPong from '../LOGO/logo-BaanPong.jpg';
 import logoMaekhaning from '../LOGO/logo-maekhaning.jpg';
 import logoRohn from '../LOGO/logo-rohn-full.png';
 import logoRohnLabel from '../LOGO/logo-rohn-label.png';
+
+// Fallback-resilient image URL resolver
+function resolveLogoSrc(importedAsset, publicFallbackPath) {
+  if (importedAsset && typeof importedAsset === 'string') return importedAsset;
+  if (importedAsset && typeof importedAsset === 'object' && importedAsset.default) return importedAsset.default;
+  return publicFallbackPath;
+}
+
+const srcBaanPong = resolveLogoSrc(logoBaanPong, '/LOGO/logo-BaanPong.jpg');
+const srcMaekhaning = resolveLogoSrc(logoMaekhaning, '/LOGO/logo-maekhaning.jpg');
+const srcRohn = resolveLogoSrc(logoRohn, '/LOGO/logo-rohn-full.png');
+const srcRohnLabel = resolveLogoSrc(logoRohnLabel, '/LOGO/logo-rohn-label.png');
 import { getRunnerNetTime, KNOWN_STATION_MAP } from '../lib/results';
 
 // Extract English inside parentheses or after colon, stripping Thai text
@@ -428,10 +440,17 @@ export default function ESlip({ runner, overallRank, catRank, stations = [], run
     <div className="eslip">
       <div className="head" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <img
-          src={logoBaanPong}
+          src={srcBaanPong}
+          onError={(e) => {
+            if (e.currentTarget.dataset.fallback !== 'true') {
+              e.currentTarget.dataset.fallback = 'true';
+              e.currentTarget.src = '/LOGO/logo-BaanPong.jpg';
+            }
+          }}
           alt="Baan Pong Trail Logo"
           className="eslip-head-logo"
-          style={{ height: '75px', maxWidth: '180px', width: 'auto', objectFit: 'contain', marginBottom: '8px' }}
+          loading="eager"
+          style={{ height: '75px', maxWidth: '180px', width: 'auto', objectFit: 'contain', marginBottom: '8px', display: 'block' }}
         />
         <span style={{ fontSize: '13px', fontWeight: 600 }}>2026</span>
       </div>
@@ -559,16 +578,30 @@ export default function ESlip({ runner, overallRank, catRank, stations = [], run
       <div className="foot" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <div className="eslip-foot-logos" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
           <img
-            src={logoMaekhaning}
+            src={srcMaekhaning}
+            onError={(e) => {
+              if (e.currentTarget.dataset.fallback !== 'true') {
+                e.currentTarget.dataset.fallback = 'true';
+                e.currentTarget.src = '/LOGO/logo-maekhaning.jpg';
+              }
+            }}
             alt="Mae Khaning Logo"
             className="eslip-foot-logo-mk"
-            style={{ height: '52px', maxWidth: '120px', width: 'auto', objectFit: 'contain', borderRadius: '4px' }}
+            loading="eager"
+            style={{ height: '52px', maxWidth: '120px', width: 'auto', objectFit: 'contain', borderRadius: '4px', display: 'block' }}
           />
           <img
-            src={logoRohn}
+            src={srcRohn}
+            onError={(e) => {
+              if (e.currentTarget.dataset.fallback !== 'true') {
+                e.currentTarget.dataset.fallback = 'true';
+                e.currentTarget.src = '/LOGO/logo-rohn-full.png';
+              }
+            }}
             alt="ROHN Logo"
             className="eslip-foot-logo-rohn"
-            style={{ height: '75px', maxWidth: '200px', width: 'auto', objectFit: 'contain' }}
+            loading="eager"
+            style={{ height: '75px', maxWidth: '200px', width: 'auto', objectFit: 'contain', display: 'block' }}
           />
         </div>
         <div className="eslip-foot-timing" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
